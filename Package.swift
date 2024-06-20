@@ -4,20 +4,25 @@
 import PackageDescription
 
 let package = Package(
-    name: "4337-sdk-ios",
+    name: "swift4337",
+    platforms: [
+        .iOS(.v14),.macOS(.v11)
+    ],
     products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
-            name: "4337-sdk-ios",
-            targets: ["4337-sdk-ios"]),
+            name: "swift4337",
+            targets: ["swift4337"]),
+    ],
+    dependencies: [
+        .package(url: "https://github.com/argentlabs/web3.swift", from: "1.6.1")
     ],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "4337-sdk-ios"),
+            name: "swift4337",
+            dependencies:[ .product(name: "web3.swift", package: "web3.swift")]
+        ),
         .testTarget(
-            name: "4337-sdk-iosTests",
-            dependencies: ["4337-sdk-ios"]),
+            name: "swift4337Tests",
+            dependencies: ["swift4337"]),
     ]
 )
