@@ -44,7 +44,7 @@ open class RPCGasEstimator {
             priorityFeeMedian = priorityFeesPerBlock.reduce(BigUInt(0), { x, y in x + y}).quotientAndRemainder(dividingBy: BigUInt(priorityFeesPerBlock.count)).quotient
         }
         
-        let adjustedMaxPriorityFee = priorityFeeMedian.multiplied(by: BigUInt(120)).quotientAndRemainder(dividingBy: BigUInt(100)).quotient
+        let adjustedMaxPriorityFee = priorityFeeMedian.multiplied(by: BigUInt(priorityFeePercentMultiplier)).quotientAndRemainder(dividingBy: BigUInt(100)).quotient
         return GasFee(maxFeePerGas: adjustedMaxBaseFee + adjustedMaxPriorityFee, maxPriorityFeePerGas: adjustedMaxPriorityFee)
     }
     
