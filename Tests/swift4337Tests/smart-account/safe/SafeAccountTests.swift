@@ -82,4 +82,24 @@ class SafeAccountTests: XCTestCase {
         
         XCTAssertEqual(signature.web3.hexString, expected)
     }
+    
+    
+    
+    func testGetOwnerWithNotDeployedThrows() async throws {
+        self.safeAccount = try await SafeAccount(address: EthereumAddress("0xF64DA4EFa19b42ef2f897a3D533294b892e6d99E"), signer: account, rpc: rpc, bundler: bundler)
+        
+        do{
+            _ = try await self.safeAccount.getOwners()
+            XCTFail("Should throw error")
+        } catch {
+            XCTAssertEqual(error as! SmartAccountError, SmartAccountError.errorAccountNotDeployed)
+        }
+    }
+    
+    func testGetOwnerWithDeployedIsOk() async throws {
+        self.safeAccount = try await SafeAccount(signer: account, rpc: rpc, bundler: bundler)
+        
+        let owners = try await self.safeAccount.getOwners()
+        XCTAssertEqual(owners[0].toChecksumAddress(), account.address.toChecksumAddress())
+    }
 }

@@ -105,5 +105,16 @@ class SmartAccountProtocolTests: XCTestCase {
         XCTAssertEqual(userOperation.initCode, "0x" )
         XCTAssertEqual(userOperation.nonce, "0x05" )
         XCTAssertEqual(userOperation.signature, "0x000000000000000000000000" )
+        
+        //let signature = try  self.smartAccount.signUserOperation(userOperation)
+        //XCTAssertEqual(signature.web3.hexString, "0x000000000000000000000000" )
+    }
+    
+    func testSendUserOperationIsOk() async throws {
+        self.smartAccount = try await SafeAccount(signer: account, rpc: rpc, bundler: bundler, paymaster: paymaster)
+        
+        let userOperationHash = try await self.smartAccount.sendUserOperation(to: EthereumAddress("0x0338Dcd5512ae8F3c481c33Eb4b6eEdF632D1d2f"), value: BigUInt(0), data: "0x06661abd".web3.hexData!)
+        
+        XCTAssertEqual(userOperationHash, "0xb38a2faf4b5c716eff634af472206f28574cd5104c69d97a315c3303ddb5fdbd" )
     }
 }

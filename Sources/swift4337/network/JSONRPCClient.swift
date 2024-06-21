@@ -8,7 +8,7 @@
 import Foundation
 import web3
 
-struct AnyEncodable: Encodable {
+public struct AnyEncodable: Encodable {
     private let encodeClosure: (Encoder) throws -> Void
 
     init<T: Encodable>(_ value: T) {
@@ -17,7 +17,7 @@ struct AnyEncodable: Encodable {
         }
     }
 
-    func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: Encoder) throws {
         try encodeClosure(encoder)
     }
 }
