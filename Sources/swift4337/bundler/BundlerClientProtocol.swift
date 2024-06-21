@@ -17,6 +17,17 @@ public struct Log: Decodable {
     public let address: String
     public let data: String
     public let topics: [String]
+    
+    public init(logIndex: String, transactionIndex: String, transactionHash: String, blockHash: String, blockNumber: String, address: String, data: String, topics: [String]) {
+        self.logIndex = logIndex
+        self.transactionIndex = transactionIndex
+        self.transactionHash = transactionHash
+        self.blockHash = blockHash
+        self.blockNumber = blockNumber
+        self.address = address
+        self.data = data
+        self.topics = topics
+    }
 }
 
 public struct Receipt: Decodable {
@@ -31,7 +42,24 @@ public struct Receipt: Decodable {
     public let logs: [Log]
     public let logsBloom: String
     public let status: String
-    public let effectiveGasPrice: String
+    public let effectiveGasPrice: String?
+    public let cumulativeGasUsed: String?
+    
+    public init(transactionHash: String, transactionIndex: String, blockHash: String, blockNumber: String, from: String, to: String, gasUsed: String, contractAddress: String?, logs: [Log], logsBloom: String, status: String, effectiveGasPrice: String?, cumulativeGasUsed: String?) {
+        self.transactionHash = transactionHash
+        self.transactionIndex = transactionIndex
+        self.blockHash = blockHash
+        self.blockNumber = blockNumber
+        self.from = from
+        self.to = to
+        self.gasUsed = gasUsed
+        self.contractAddress = contractAddress
+        self.logs = logs
+        self.logsBloom = logsBloom
+        self.status = status
+        self.effectiveGasPrice = effectiveGasPrice
+        self.cumulativeGasUsed = cumulativeGasUsed
+    }
 }
 
 public struct GetUserOperationReceiptResponse: Decodable{
@@ -39,10 +67,23 @@ public struct GetUserOperationReceiptResponse: Decodable{
     public let sender: String
     public let nonce: String
     public let actualGasUsed: String
+    public let paymaster: String?
     public let actualGasCost: String
     public let success: Bool
     public let logs: [Log]
     public let receipt: Receipt
+    
+    public init(userOpHash: String, sender: String, nonce: String, actualGasUsed: String, paymaster: String?, actualGasCost: String, success: Bool, logs: [Log], receipt: Receipt) {
+        self.userOpHash = userOpHash
+        self.sender = sender
+        self.nonce = nonce
+        self.actualGasUsed = actualGasUsed
+        self.paymaster = paymaster
+        self.actualGasCost = actualGasCost
+        self.success = success
+        self.logs = logs
+        self.receipt = receipt
+    }
 }
 
 public struct GetUserOperationByHashResponse: Decodable{
@@ -51,6 +92,14 @@ public struct GetUserOperationByHashResponse: Decodable{
     public let transactionHash: String
     public let blockHash: String
     public let blockNumber: String
+    
+    public init(userOperation: UserOperation, entryPoint: String, transactionHash: String, blockHash: String, blockNumber: String) {
+        self.userOperation = userOperation
+        self.entryPoint = entryPoint
+        self.transactionHash = transactionHash
+        self.blockHash = blockHash
+        self.blockNumber = blockNumber
+    }
 }
 
 

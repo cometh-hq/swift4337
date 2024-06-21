@@ -106,8 +106,7 @@ class SmartAccountProtocolTests: XCTestCase {
         XCTAssertEqual(userOperation.nonce, "0x05" )
         XCTAssertEqual(userOperation.signature, "0x000000000000000000000000" )
         
-        //let signature = try  self.smartAccount.signUserOperation(userOperation)
-        //XCTAssertEqual(signature.web3.hexString, "0x000000000000000000000000" )
+   
     }
     
     func testSendUserOperationIsOk() async throws {
