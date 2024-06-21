@@ -63,7 +63,7 @@ extension SmartAccountProtocol{
         return code != "0x"
     }
     
-    public func prepareUserOperation(to: EthereumAddress, value: BigUInt, data: Data) async throws -> UserOperation{
+    public func prepareUserOperation(to: EthereumAddress, value: BigUInt = BigUInt(0), data: Data = Data()) async throws -> UserOperation{
         let callData = try self.getCallData(to: to, value: value, data: data)
         let nonce = try await self.getNonce()
         
@@ -98,7 +98,7 @@ extension SmartAccountProtocol{
     }
 
     
-    public func sendUserOperation(to: EthereumAddress, value: BigUInt, data: Data) async throws -> String{
+    public func sendUserOperation(to: EthereumAddress, value: BigUInt = BigUInt(0), data: Data = Data()) async throws -> String{
         var userOperation = try await self.prepareUserOperation(to: to, value: value, data: data)
         userOperation.signature = try self.signUserOperation(userOperation).web3.hexString
         return try await self.bundler.eth_sendUserOperation(userOperation, entryPoint: self.entryPointAddress)

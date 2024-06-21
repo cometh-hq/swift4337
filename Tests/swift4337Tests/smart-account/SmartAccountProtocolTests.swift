@@ -68,13 +68,30 @@ class SmartAccountProtocolTests: XCTestCase {
         XCTAssertEqual(userOperation.initCode, "0x" )
         XCTAssertEqual(userOperation.nonce, "0x05" )
         XCTAssertEqual(userOperation.signature, "0x000000000000000000000000" )
+    }
+    
+    func testPrepareUserOperationWithAccountDeployedAndValueAndNoDataIsOk() async throws {
+        self.smartAccount = try await SafeAccount(signer: account, rpc: rpc, bundler: bundler)
         
+        let userOperation = try await self.smartAccount.prepareUserOperation(to: EthereumAddress("0xF64DA4EFa19b42ef2f897a3D533294b892e6d99E"), value: BigUInt(1))
+        
+        XCTAssertEqual(userOperation.sender, "0x2FF46F26638977AE8C88e205cCa407A1a9725F0B" )
+        XCTAssertEqual(userOperation.callGasLimit, "12100" )
+        XCTAssertEqual(userOperation.preVerificationGas, "60460" )
+        XCTAssertEqual(userOperation.verificationGasLimit, "285642" )
+        XCTAssertEqual(userOperation.maxFeePerGas, "0x01e3fb094e" )
+        XCTAssertEqual(userOperation.maxPriorityFeePerGas, "0x53cd81aa" )
+        XCTAssertEqual(userOperation.paymasterAndData, "0x" )
+        XCTAssertEqual(userOperation.callData, "0x7bb37428000000000000000000000000f64da4efa19b42ef2f897a3d533294b892e6d99e0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" )
+        XCTAssertEqual(userOperation.initCode, "0x" )
+        XCTAssertEqual(userOperation.nonce, "0x05" )
+        XCTAssertEqual(userOperation.signature, "0x000000000000000000000000" )
     }
     
     func testPrepareUserOperationWithAccountNotDeployedIsOk() async throws {
         self.smartAccount = try await SafeAccount(address: EthereumAddress("0xF64DA4EFa19b42ef2f897a3D533294b892e6d99E"), signer: account, rpc: rpc, bundler: bundler)
         
-        let userOperation = try await self.smartAccount.prepareUserOperation(to: EthereumAddress("0x0338Dcd5512ae8F3c481c33Eb4b6eEdF632D1d2f"), value: BigUInt(0), data: "0x06661abd".web3.hexData!)
+        let userOperation = try await self.smartAccount.prepareUserOperation(to: EthereumAddress("0x0338Dcd5512ae8F3c481c33Eb4b6eEdF632D1d2f"), data: "0x06661abd".web3.hexData!)
         
         XCTAssertEqual(userOperation.sender, "0xF64DA4EFa19b42ef2f897a3D533294b892e6d99E" )
         XCTAssertEqual(userOperation.callGasLimit, "12100" )
@@ -105,8 +122,6 @@ class SmartAccountProtocolTests: XCTestCase {
         XCTAssertEqual(userOperation.initCode, "0x" )
         XCTAssertEqual(userOperation.nonce, "0x05" )
         XCTAssertEqual(userOperation.signature, "0x000000000000000000000000" )
-        
-   
     }
     
     func testSendUserOperationIsOk() async throws {
