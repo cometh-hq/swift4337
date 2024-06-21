@@ -23,11 +23,11 @@ public struct SafeAccount: SmartAccountProtocol  {
   
     public var entryPointAddress: EthereumAddress
     
-    public init(address: String? = nil, signer: EthereumAccount, rpc: EthereumRPCProtocol, bundler: BundlerClientProtocol, paymaster: PaymasterClientProtocol? = nil, safeConfig: SafeConfig = SafeConfig()) async throws {
-        if (address == nil) {
-            self.address = try await SafeAccount.predictAddress(signer: signer, rpc: rpc)
+    public init(address: EthereumAddress? = nil, signer: EthereumAccount, rpc: EthereumRPCProtocol, bundler: BundlerClientProtocol, paymaster: PaymasterClientProtocol? = nil, safeConfig: SafeConfig = SafeConfig()) async throws {
+        if let address {
+            self.address = address
         } else {
-            self.address = EthereumAddress(address!)
+            self.address = try await SafeAccount.predictAddress(signer: signer, rpc: rpc)
         }
         self.signer = signer
         self.safeConfig = safeConfig

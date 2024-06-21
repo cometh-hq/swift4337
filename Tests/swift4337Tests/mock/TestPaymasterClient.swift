@@ -15,12 +15,8 @@ enum TestPaymasterClientError: Error {
 }
 
 struct TestPaymasterClient: PaymasterClientProtocol{
-    func pm_sponsorUserOperation(_ userOperation: swift4337.UserOperation, entryPoint: web3.EthereumAddress) async throws -> swift4337.SponsorUserOperationResponse? {
-        throw TestBundlerClientError.notImplemented
-    }
-    
-    func pm_supportedEntryPoints() async throws -> [web3.EthereumAddress] {
-        throw TestBundlerClientError.notImplemented
-    }
-    
+    var networkProvider: any web3.NetworkProviderProtocol
+    init() {
+        self.networkProvider =  TestNetworkProvider()
+    }    
 }

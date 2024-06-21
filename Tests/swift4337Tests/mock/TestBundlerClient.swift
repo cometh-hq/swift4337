@@ -14,25 +14,8 @@ enum TestBundlerClientError: Error {
 }
 
 struct TestBundlerClient: BundlerClientProtocol{
-    
-    
-    func eth_sendUserOperation(_ userOperation: swift4337.UserOperation, entryPoint: web3.EthereumAddress) async throws -> String {
-        throw TestBundlerClientError.notImplemented
-    }
-    
-    func eth_estimateUserOperationGas(_ userOperation: swift4337.UserOperation, entryPoint: web3.EthereumAddress) async throws -> swift4337.UserOperationGasEstimationResponse {
-        throw TestBundlerClientError.notImplemented
-    }
-    
-    func eth_getUserOperationByHash(_ userOperationHash: String) async throws -> swift4337.GetUserOperationByHashResponse? {
-        throw TestBundlerClientError.notImplemented
-    }
-    
-    func eth_getUserOperationReceipt(_ userOperationHash: String) async throws -> swift4337.GetUserOperationReceiptResponse? {
-        throw TestBundlerClientError.notImplemented
-    }
-    
-    func eth_supportedEntryPoints() async throws -> [web3.EthereumAddress] {
-        throw TestBundlerClientError.notImplemented
+    var networkProvider: any web3.NetworkProviderProtocol
+    init() {
+        self.networkProvider =  TestNetworkProvider()
     }
 }

@@ -15,6 +15,13 @@ public struct FeeHistoryResponse: Decodable {
     public let reward : [[String]]
     public let baseFeePerGas: [String]
     public let gasUsedRatio: [Double]
+    
+    public init(oldestBlock: String, reward: [[String]], baseFeePerGas: [String], gasUsedRatio: [Double]) {
+        self.oldestBlock = oldestBlock
+        self.reward = reward
+        self.baseFeePerGas = baseFeePerGas
+        self.gasUsedRatio = gasUsedRatio
+    }
 }
 
 

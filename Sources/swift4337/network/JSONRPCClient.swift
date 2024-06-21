@@ -29,24 +29,11 @@ struct JSONRPCRequest<T: Encodable>: Encodable {
     public let id: Int
 }
 
-open class JSONRPCClient {
-    public let url: URL
-    
-    let networkProvider: HttpNetworkProvider
-    
-    private let session: URLSession
-    
-    public init(url: URL) {
-        self.url = url
-        
-        let networkQueue = OperationQueue()
-        networkQueue.name = "4337-sdk.client.networkQueue"
-        networkQueue.maxConcurrentOperationCount = 4
-               
-        self.session = URLSession(configuration: URLSession.shared.configuration, delegate: nil, delegateQueue: networkQueue)
-        self.networkProvider = HttpNetworkProvider(session: session, url: url)
-    }
-    
+public protocol JSONRPCClientProtocol {
+    var networkProvider: NetworkProviderProtocol { get }
+}
+
+extension JSONRPCClientProtocol{
     func failureHandler(_ error: Error) -> EthereumClientError {
         if case let .executionError(result) = error as? JSONRPCError {
             return EthereumClientError.executionError(result.error)
@@ -56,5 +43,4 @@ open class JSONRPCClient {
             return EthereumClientError.unexpectedReturnValue
         }
     }
-    
 }

@@ -10,39 +10,16 @@ import web3
 
 
 
-open class PaymasterClient: JSONRPCClient, PaymasterClientProtocol {
+open class PaymasterClient: PaymasterClientProtocol {
     
-    public func pm_sponsorUserOperation(_ userOperation: UserOperation, entryPoint: EthereumAddress)  async throws -> SponsorUserOperationResponse? {
-        let params: [AnyEncodable] = [AnyEncodable(userOperation), AnyEncodable(entryPoint.toChecksumAddress())]
+    public var networkProvider: any web3.NetworkProviderProtocol
     
-        do {
-            let data = try await  self.networkProvider.send(method: "pm_sponsorUserOperation", params: params, receive: SponsorUserOperationResponse?.self)
-        
-            if let estimation = data as? SponsorUserOperationResponse? {
-                return estimation
-            } else {
-                throw EthereumClientError.unexpectedReturnValue
-            }
-        } catch {
-            throw failureHandler(error)
-        }
+    public init(url: URL) {
+        let networkQueue = OperationQueue()
+        networkQueue.name = "4337-sdk.paymaster-client.networkQueue"
+        networkQueue.maxConcurrentOperationCount = 4
+               
+        let session = URLSession(configuration: URLSession.shared.configuration, delegate: nil, delegateQueue: networkQueue)
+        self.networkProvider = HttpNetworkProvider(session: session, url: url)
     }
-    
-    public func pm_supportedEntryPoints()  async throws -> [EthereumAddress] {
-        let params: [AnyEncodable] = []
-    
-        do {
-            let data = try await  self.networkProvider.send(method: "pm_supportedEntryPoints", params: params, receive: [EthereumAddress].self)
-        
-            if let estimation = data as? [EthereumAddress] {
-                return estimation
-            } else {
-                throw EthereumClientError.unexpectedReturnValue
-            }
-        } catch {
-            throw failureHandler(error)
-        }
-    }
-    
-    
 }

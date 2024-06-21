@@ -10,7 +10,7 @@ import web3
 import BigInt
 @testable import swift4337
 
-let testPrivateKey = "0x4646464646464646464646464646464646464646464646464646464646464646";
+
   
 
 class SafeAccountTests: XCTestCase {
