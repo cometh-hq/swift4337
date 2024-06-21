@@ -14,6 +14,7 @@ public enum SmartAccountError: Error, Equatable {
     case errorGeneratingCallDate
     case errorPredictingAddress
     case errorGettingInitCode
+    case errorAccountNotDeployed
 }
 
 public struct EIP712Domain {
@@ -38,25 +39,23 @@ public protocol SmartAccountProtocol {
     var chainId: Int {get}
     var entryPointAddress: EthereumAddress {get}
    
-    func initCode() async throws -> String
-    func getCallData(to: EthereumAddress, value:BigUInt, data:Data) throws -> String
-    func getNonce(key: BigUInt) async throws -> String
-    func getOwners() async throws -> [EthereumAddress] 
-    func signUserOperation(_ userOperation: UserOperation) throws -> String
+    func getInitCode() async throws -> Data
+    func getCallData(to: EthereumAddress, value:BigUInt, data:Data) throws -> Data
+    func getNonce(key: BigUInt) async throws -> BigUInt
+    func getOwners() async throws -> [EthereumAddress]
+    func signUserOperation(_ userOperation: UserOperation) throws -> Data
     
     func prepareUserOperation(to: EthereumAddress, value: BigUInt, data: Data) async throws -> UserOperation
     func sendTransaction(to: EthereumAddress, value: BigUInt, data: Data) async throws -> String
 }
 
-
-
 extension SmartAccountProtocol{
     
-    public func getNonce(key: BigUInt = BigUInt(0)) async throws -> String {
+    public func getNonce(key: BigUInt = BigUInt(0)) async throws -> BigUInt {
         let entryPoint = EntryPoint(client: self.rpc, address: self.entryPointAddress)
         let nonce = try await entryPoint.getNonce(sender: self.address, key: BigUInt(0))
      
-        return nonce.web3.hexString
+        return nonce
     }
     
     public func isDeployed() async throws -> Bool{
@@ -69,14 +68,14 @@ extension SmartAccountProtocol{
         let nonce = try await self.getNonce()
         
         
-        var initCode = "0x"
+        var initCode = Data()
         if (try await self.isDeployed() ==  false) {
-            initCode = try await self.initCode()
+            initCode = try await self.getInitCode()
         }
         var userOperation = UserOperation(sender: self.address.toChecksumAddress(),
-                                          nonce: nonce,
-                                          initCode: initCode,
-                                          callData: callData)
+                                          nonce: nonce.web3.hexString,
+                                          initCode: initCode.web3.hexString,
+                                          callData: callData.web3.hexString)
         
         let gasEstimator = RPCGasEstimator(self.rpc)
         let gasFee = try await gasEstimator.getGasFees()
@@ -99,13 +98,12 @@ extension SmartAccountProtocol{
         }
         
         return userOperation
-       
     }
 
     
     public func sendTransaction(to: EthereumAddress, value: BigUInt, data: Data) async throws -> String{
         var userOperation = try await self.prepareUserOperation(to: to, value: value, data: data)
-        userOperation.signature = try self.signUserOperation(userOperation)
+        userOperation.signature = try self.signUserOperation(userOperation).web3.hexString
         return try await self.bundler.eth_sendUserOperation(userOperation, entryPoint: self.entryPointAddress)
     }
     

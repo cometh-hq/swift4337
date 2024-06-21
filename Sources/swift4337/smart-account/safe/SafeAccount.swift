@@ -136,7 +136,7 @@ public struct SafeAccount: SmartAccountProtocol  {
         return jsonData.data(using: .utf8)!
     }
     
-    public func getCallData(to: EthereumAddress, value:BigUInt, data:Data) throws -> String{
+    public func getCallData(to: EthereumAddress, value:BigUInt, data:Data) throws -> Data{
         let encoder = ExecuteUserOpFunction(contract: self.address, to: to,
                        value: value, calldata:data , operation: 0)
          
@@ -145,10 +145,10 @@ public struct SafeAccount: SmartAccountProtocol  {
         guard let callData = encodedTxCall.data else {
             throw SmartAccountError.errorGeneratingCallDate
         }
-        return callData.web3.hexString
+        return callData
     }
     
-    public func signUserOperation(_ userOperation: UserOperation) throws -> String {
+    public func signUserOperation(_ userOperation: UserOperation) throws -> Data {
         let validAfter = BigUInt(0)
         let validUntil = BigUInt(0)
         
@@ -163,16 +163,21 @@ public struct SafeAccount: SmartAccountProtocol  {
         let validAfterEncoded =  try ABIEncoder.encode(validAfter, uintSize: 48)
         
         let signaturePacked =  [validUntilEncoded.bytes, validAfterEncoded.bytes,  signed.web3.hexData!.bytes].flatMap { $0 }
-        return signaturePacked.hexString
+        return Data(signaturePacked)
     }
     
     public func getOwners() async throws -> [EthereumAddress] {
+        
+        guard try await self.isDeployed() else {
+            throw SmartAccountError.errorAccountNotDeployed
+        }
+        
         let function = GetOwnersFunction(contract: self.address)
         let data = try await function.call(withClient: self.rpc, responseType: GetOwnersResponse.self)
         return data.value
     }
     
-    public func initCode() async throws -> String {
+    public func getInitCode() async throws -> Data {
         let nonce = self.safeConfig.creationNonce
         
         guard let enableModulesCallData = try EnableModulesFunction(contract: EthereumAddress(self.safeConfig.safeModuleSetupAddress),
@@ -198,7 +203,7 @@ public struct SafeAccount: SmartAccountProtocol  {
         }
         
         let initCode = [EthereumAddress(self.safeConfig.proxyFactory).asData()!.bytes, createProxyWithNonceData.bytes].flatMap { $0 }
-        return initCode.hexString
+        return Data(initCode)
         
     }
     
