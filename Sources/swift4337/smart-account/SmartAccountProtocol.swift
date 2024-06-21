@@ -67,7 +67,6 @@ extension SmartAccountProtocol{
         let callData = try self.getCallData(to: to, value: value, data: data)
         let nonce = try await self.getNonce()
         
-        
         var initCode = Data()
         if (try await self.isDeployed() ==  false) {
             initCode = try await self.getInitCode()
@@ -88,13 +87,11 @@ extension SmartAccountProtocol{
         userOperation.verificationGasLimit = estimation.verificationGasLimit
         userOperation.callGasLimit =  estimation.callGasLimit
         
-        if let paymaster = self.paymaster {
-            if let sponsorData = try await paymaster.pm_sponsorUserOperation(userOperation, entryPoint: self.entryPointAddress) {
-                userOperation.paymasterAndData = sponsorData.paymasterAndData
-                userOperation.callGasLimit = sponsorData.callGasLimit
-                userOperation.preVerificationGas = sponsorData.preVerificationGas
-                userOperation.verificationGasLimit = sponsorData.verificationGasLimit
-            }
+        if let sponsorData = try await paymaster?.pm_sponsorUserOperation(userOperation, entryPoint: self.entryPointAddress) {
+            userOperation.paymasterAndData = sponsorData.paymasterAndData
+            userOperation.callGasLimit = sponsorData.callGasLimit
+            userOperation.preVerificationGas = sponsorData.preVerificationGas
+            userOperation.verificationGasLimit = sponsorData.verificationGasLimit
         }
         
         return userOperation
