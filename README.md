@@ -106,14 +106,17 @@ public protocol SmartAccountProtocol {
     var chainId: Int {get}
     var entryPointAddress: EthereumAddress {get}
 
-    func getInitCode() async throws -> Data
-    func getCallData(to: EthereumAddress, value:BigUInt, data:Data) throws -> Data
-    func getNonce(key: BigUInt) async throws -> BigUInt
-    func getOwners() async throws -> [EthereumAddress]
-    func signUserOperation(_ userOperation: UserOperation) throws -> Data
-
+    // Methods already implemented by SmartAccountProtocol (see extension below)
     func prepareUserOperation(to: EthereumAddress, value: BigUInt, data: Data) async throws -> UserOperation
     func sendUserOperation(to: EthereumAddress, value: BigUInt, data: Data) async throws -> String
+    func isDeployed() async throws -> Bool
+    func getNonce(key: BigUInt) async throws -> BigUInt
+
+    // Methods to be implemented for each type of smart account
+    func getInitCode() async throws -> Data
+    func getCallData(to: EthereumAddress, value:BigUInt, data:Data) throws -> Data
+    func getOwners() async throws -> [EthereumAddress]
+    func signUserOperation(_ userOperation: UserOperation) throws -> Data
 }
 ```
 
@@ -122,6 +125,7 @@ Methods implemented directly by the SmartAccountProtocol:
 - **prepareUserOperation**: Prepares the user operation, get the initCode if the account is not deployed, calls the paymaster if available, and obtains the gas estimation.
 - **sendUserOperation**: Prepares the user operation, signs the user operation, sends it to the bundler, and returns a user operation hash.
 - **getNonce**: Returns the current nonce for the smart wallet on the entry point.
+- **isDeployed**: Returns true if the smart account is already deployed.
 
 To be compatible with Swift4337, a smart account must provide the following methods (currently, we support Safe Accounts and provide [the implementation](https://github.com/cometh-hq/swift4337/blob/main/Sources/swift4337/smart-account/safe/SafeAccount.swift)):
 

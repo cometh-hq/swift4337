@@ -38,15 +38,18 @@ public protocol SmartAccountProtocol {
 
     var chainId: Int {get}
     var entryPointAddress: EthereumAddress {get}
-   
-    func getInitCode() async throws -> Data
-    func getCallData(to: EthereumAddress, value:BigUInt, data:Data) throws -> Data
-    func getNonce(key: BigUInt) async throws -> BigUInt
-    func getOwners() async throws -> [EthereumAddress]
-    func signUserOperation(_ userOperation: UserOperation) throws -> Data
     
+    // Methods already implemented by SmartAccountProtocol (see extension below)
     func prepareUserOperation(to: EthereumAddress, value: BigUInt, data: Data) async throws -> UserOperation
     func sendUserOperation(to: EthereumAddress, value: BigUInt, data: Data) async throws -> String
+    func isDeployed() async throws -> Bool
+    func getNonce(key: BigUInt) async throws -> BigUInt
+   
+    // Methods to be implemented for each type of smart account
+    func getInitCode() async throws -> Data
+    func getCallData(to: EthereumAddress, value:BigUInt, data:Data) throws -> Data
+    func getOwners() async throws -> [EthereumAddress]
+    func signUserOperation(_ userOperation: UserOperation) throws -> Data
 }
 
 extension SmartAccountProtocol{
