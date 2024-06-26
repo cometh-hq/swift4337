@@ -79,6 +79,7 @@ init(address: EthereumAddress? = nil,
 - safeConfig: If not provided, the default configuration will be used.
 
 ```swift
+// these values are from the safe deployments repo
 public struct SafeConfig {
     public var safeSingletonL2 = "0x29fcB43b46531BcA003ddC8FCB67FFE91900C762"
     public var proxyFactory = "0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67"
@@ -123,15 +124,15 @@ public protocol SmartAccountProtocol {
 Methods implemented directly by the SmartAccountProtocol:
 
 - **prepareUserOperation**: Prepares the user operation, get the initCode if the account is not deployed, calls the paymaster if available, and obtains the gas estimation.
-- **sendUserOperation**: Prepares the user operation, signs the user operation, sends it to the bundler, and returns a user operation hash.
-- **getNonce**: Returns the current nonce for the smart wallet on the entry point.
+- **sendUserOperation**: Prepares the user operation, signs it, sends it to the bundler, and returns a user operation hash.
+- **getNonce**: Returns the current nonce for the smart wallet from the entry point.
 - **isDeployed**: Returns true if the smart account is already deployed.
 
 To be compatible with Swift4337, a smart account must provide the following methods (currently, we support Safe Accounts and provide [the implementation](https://github.com/cometh-hq/swift4337/blob/main/Sources/swift4337/smart-account/safe/SafeAccount.swift)):
 
 - **getInitCode**: Returns the InitCode required to deploy the wallet on the first user operation.
 - **signUserOperation**: Signs the user operation with the signer associated with the smart account.
-- **getCallData**: Returns the callData to execute the to, value, data operation.
+- **getCallData**: Returns the callData to execute the transactions parameters (to, value, data and operation).
 - **getOwners**: Returns the list of owners of the smart account.
 
 ### Signer
