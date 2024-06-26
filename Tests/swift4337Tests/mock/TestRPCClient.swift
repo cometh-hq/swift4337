@@ -25,7 +25,7 @@ class TestRPCClient: EthereumRPCProtocol{
     }
     
     func eth_call(_ transaction: web3.EthereumTransaction, resolution: web3.CallResolution, block: web3.EthereumBlock) async throws -> String {
-        let safeConfig = SafeConfig()
+        let safeConfig = SafeConfig.entryPointV6()
         if (transaction.to == EthereumAddress(safeConfig.proxyFactory)) {
           
             //return getProxyCode

@@ -31,26 +31,26 @@ class BundlerClientTests: XCTestCase {
     
     func testSupportedEntryPointsIsOk() async throws {
         let entrypoints = try await self.bundler.eth_supportedEntryPoints()
-        XCTAssertEqual(entrypoints[0].toChecksumAddress(), SafeConfig().entryPointAddress )
+        XCTAssertEqual(entrypoints[0].toChecksumAddress(), SafeConfig.entryPointV6().entryPointAddress )
     }
     
     func testEstimateUserOperationGasIsOk() async throws {
 
-        let userOperationestimation = try await self.bundler.eth_estimateUserOperationGas(self.userOp, entryPoint: EthereumAddress(SafeConfig().entryPointAddress))
+        let userOperationestimation = try await self.bundler.eth_estimateUserOperationGas(self.userOp, entryPoint: EthereumAddress(SafeConfig.entryPointV6().entryPointAddress))
         XCTAssertEqual(userOperationestimation.callGasLimit, "12100" )
         XCTAssertEqual(userOperationestimation.preVerificationGas, "60460" )
         XCTAssertEqual(userOperationestimation.verificationGasLimit, "285642" )
     }
     
     func testSendUserOperationIsOk() async throws {
-        let userOperationHash = try await self.bundler.eth_sendUserOperation(self.userOp, entryPoint: EthereumAddress(SafeConfig().entryPointAddress))
+        let userOperationHash = try await self.bundler.eth_sendUserOperation(self.userOp, entryPoint: EthereumAddress(SafeConfig.entryPointV6().entryPointAddress))
         XCTAssertEqual(userOperationHash, "0xb38a2faf4b5c716eff634af472206f28574cd5104c69d97a315c3303ddb5fdbd" )
     }
     
     func testGetUserOperationByHashIsOk() async throws {
         let response = try await self.bundler.eth_getUserOperationByHash("0xb38a2faf4b5c716eff634af472206f28574cd5104c69d97a315c3303ddb5fdbd")
        
-        XCTAssertEqual(response?.entryPoint, SafeConfig().entryPointAddress)
+        XCTAssertEqual(response?.entryPoint, SafeConfig.entryPointV6().entryPointAddress)
         XCTAssertEqual(response?.transactionHash, "0x87004b8eda9e46071f0feb28ffb32a94d9475edb76000102bca104cc78a14291")
         XCTAssertEqual(response?.blockHash, "0x505de34521e76be46c6f6c28ca939e75708375a12e74abc8f043916f4a4b01d5" )
         XCTAssertEqual(response?.blockNumber, "0x5d99da" )

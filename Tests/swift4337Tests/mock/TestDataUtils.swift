@@ -44,7 +44,7 @@ public struct TestDataUtils {
                                            receipt: receipt)
     
     public static let getUserOperationByHashResponse = GetUserOperationByHashResponse(userOperation: TestDataUtils.userOp,
-                                                       entryPoint: SafeConfig().entryPointAddress,
+                                                                                      entryPoint: SafeConfig.entryPointV6().entryPointAddress,
                                                        transactionHash: "0x87004b8eda9e46071f0feb28ffb32a94d9475edb76000102bca104cc78a14291",
                                                        blockHash: "0x505de34521e76be46c6f6c28ca939e75708375a12e74abc8f043916f4a4b01d5",
                                                        blockNumber: "0x5d99da")

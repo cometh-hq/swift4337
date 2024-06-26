@@ -33,7 +33,7 @@ class TestNetworkProvider: NetworkProviderProtocol {
         }
         
         if (method == "pm_supportedEntryPoints" || method == "eth_supportedEntryPoints") {
-            return [EthereumAddress(SafeConfig().entryPointAddress)]
+            return [EthereumAddress(SafeConfig.entryPointV6().entryPointAddress)]
         }
 
         if (method == "eth_estimateUserOperationGas") {

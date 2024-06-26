@@ -32,7 +32,7 @@ class PaymasterClientTests: XCTestCase {
                                    maxPriorityFeePerGas: "0x53cd81aa"
         )
         
-        let sponsorResponse = try await self.paymaster.pm_sponsorUserOperation(userOp, entryPoint: EthereumAddress(SafeConfig().entryPointAddress))
+        let sponsorResponse = try await self.paymaster.pm_sponsorUserOperation(userOp, entryPoint: EthereumAddress(SafeConfig.entryPointV6().entryPointAddress))
         XCTAssertEqual(sponsorResponse?.paymasterAndData, "0xDFF7FA1077Bce740a6a212b3995990682c0Ba66d000000000000000000000000000000000000000000000000000000006672ce7100000000000000000000000000000000000000000000000000000000000000000e499f53c85c53cd4f1444b807e380c6a01a412d7e1cfd24b6153debb97cbc986e6809dff8c005ed94c32bf1d5e722b9f40b909fc89d8982f2f99cb7a91b19f01c" )
        
         XCTAssertEqual(sponsorResponse?.preVerificationGas, "0xef1c" )
@@ -42,6 +42,6 @@ class PaymasterClientTests: XCTestCase {
     
     func testSupportedEntryPointsIsOk() async throws {
         let entrypoints = try await self.paymaster.pm_supportedEntryPoints()
-        XCTAssertEqual(entrypoints[0].toChecksumAddress(), SafeConfig().entryPointAddress )
+        XCTAssertEqual(entrypoints[0].toChecksumAddress(), SafeConfig.entryPointV6().entryPointAddress )
     }
 }

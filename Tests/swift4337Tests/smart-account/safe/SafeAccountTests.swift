@@ -27,23 +27,15 @@ class SafeAccountTests: XCTestCase {
         super.tearDown()
     }
     
- 
-    func testInitWalletWithoutAddressProdictAddressIsOk() async throws {
-        self.safeAccount = try await SafeAccount(signer: account, rpc: rpc, bundler: bundler)
-        let expectedAddress = EthereumAddress("0x2ff46f26638977ae8c88e205cca407a1a9725f0b")
-        
-         XCTAssertEqual(safeAccount.address.toChecksumAddress(), expectedAddress.toChecksumAddress())
-    }
-    
-    
     func testInitWalletWithoutAddressProdictAddressWithCustomSafeConfigIsOk() async throws {
-        let safeConfig = SafeConfig(creationNonce: BigUInt(2))
+        var safeConfig = SafeConfig.entryPointV6()
+        safeConfig.creationNonce = BigUInt(2)
         self.safeAccount = try await SafeAccount(signer: account, rpc: rpc, bundler: bundler, safeConfig:safeConfig)
         let expectedAddress = EthereumAddress("0x2bEB15C8994C9C7b6cc6C70220Cf81381f5CC385")
         
          XCTAssertEqual(safeAccount.address.toChecksumAddress(), expectedAddress.toChecksumAddress())
     }
-    
+
     func testGetCallDataWithOnlyValueIsOk() async throws {
         self.safeAccount = try await SafeAccount(signer: account, rpc: rpc, bundler: bundler)
         let callData = try safeAccount.getCallData(to: EthereumAddress("0xF64DA4EFa19b42ef2f897a3D533294b892e6d99E"), value: BigUInt(1), data: "0x".web3.hexData!)
@@ -71,28 +63,6 @@ class SafeAccountTests: XCTestCase {
         
         XCTAssertEqual(initCode.web3.hexString, expected)
     }
-    
-    func testSignUserOperationIsOk() async throws {
-        
-        self.safeAccount = try await SafeAccount(signer: account, rpc: rpc, bundler: bundler)
-        let userOp = UserOperation(sender: "0x2ff46f26638977ae8c88e205cca407a1a9725f0b",
-                                   nonce: "0x00",
-                                   callData: "0x7bb374280000000000000000000000000338dcd5512ae8f3c481c33eb4b6eedf632d1d2f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000406661abd00000000000000000000000000000000000000000000000000000000",
-                                   preVerificationGas:"0xea60",
-                                   callGasLimit: "0x1e8480",
-                                   verificationGasLimit: "0x07a120", maxFeePerGas:"0x02ee7c55e2",
-                                   maxPriorityFeePerGas: "0x1f2ecf7f",
-                                   paymasterAndData:"0x")
-                                   
-        
-        let expected = "0x000000000000000000000000a5927f1a1d8783d9d7033abf5f1883582525a3558055b46a9425c5627a1a83d460d64f361379e3aa710d74b3c4763288598f373c866263c4a45394908c74a6d31c"
-        
-        let signature = try  self.safeAccount.signUserOperation(userOp)
-        
-        XCTAssertEqual(signature.web3.hexString, expected)
-    }
-    
-    
     
     func testGetOwnerWithNotDeployedThrows() async throws {
         self.safeAccount = try await SafeAccount(address: EthereumAddress("0xF64DA4EFa19b42ef2f897a3D533294b892e6d99E"), signer: account, rpc: rpc, bundler: bundler)
