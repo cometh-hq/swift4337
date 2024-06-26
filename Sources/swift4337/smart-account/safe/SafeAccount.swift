@@ -11,7 +11,6 @@ import os
 
 
 public struct SafeAccount: SmartAccountProtocol  {
-    
     public let address: EthereumAddress
     public let safeConfig: SafeConfig
     public let signer: EthereumAccount
@@ -87,7 +86,12 @@ public struct SafeAccount: SmartAccountProtocol  {
         return data.value
     }
     
-    public func getInitCode() async throws -> Data {
+    
+    public func getFactoryAddress() -> EthereumAddress {
+        return EthereumAddress(self.safeConfig.proxyFactory)
+    }
+    
+    public func getFactoryData() async throws -> Data {
         let nonce = self.safeConfig.creationNonce
         
         guard let enableModulesCallData = try EnableModulesFunction(contract: EthereumAddress(self.safeConfig.safeModuleSetupAddress),
@@ -112,9 +116,7 @@ public struct SafeAccount: SmartAccountProtocol  {
             throw SmartAccountError.errorGettingInitCode
         }
         
-        let initCode = [EthereumAddress(self.safeConfig.proxyFactory).asData()!.bytes, createProxyWithNonceData.bytes].flatMap { $0 }
-        return Data(initCode)
-        
+        return createProxyWithNonceData
     }
     
     public static func predictAddress(signer: EthereumAccount, rpc: EthereumRPCProtocol, safeConfig: SafeConfig = SafeConfig.entryPointV6()) async throws -> EthereumAddress {
