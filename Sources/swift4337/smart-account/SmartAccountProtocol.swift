@@ -44,7 +44,6 @@ public protocol SmartAccountProtocol {
     func sendUserOperation(to: EthereumAddress, value: BigUInt, data: Data) async throws -> String
     func isDeployed() async throws -> Bool
     func getNonce(key: BigUInt) async throws -> BigUInt
-    func getInitCode() async throws -> Data
    
     // Methods to be implemented for each type of smart account
     func getFactoryAddress() -> EthereumAddress
@@ -68,23 +67,20 @@ extension SmartAccountProtocol{
         return code != "0x"
     }
     
-    public func getInitCode() async throws -> Data {
-        let initCode = [self.getFactoryAddress().asData()!.bytes, try await self.getFactoryData().bytes].flatMap { $0 }
-        return Data(initCode)
-        
-    }
-    
     public func prepareUserOperation(to: EthereumAddress, value: BigUInt = BigUInt(0), data: Data = Data()) async throws -> UserOperation{
         let callData = try self.getCallData(to: to, value: value, data: data)
         let nonce = try await self.getNonce()
         
-        var initCode = Data()
+        var factory:String?
+        var factoryData:String?
         if (try await self.isDeployed() ==  false) {
-            initCode = try await self.getInitCode()
+            factory = self.getFactoryAddress().toChecksumAddress()
+            factoryData = try await self.getFactoryData().web3.hexString
         }
         var userOperation = UserOperation(sender: self.address.toChecksumAddress(),
                                           nonce: nonce.web3.hexString,
-                                          initCode: initCode.web3.hexString,
+                                          factory: factory,
+                                          factoryData: factoryData,
                                           callData: callData.web3.hexString)
         
         let gasEstimator = RPCGasEstimator(self.rpc)

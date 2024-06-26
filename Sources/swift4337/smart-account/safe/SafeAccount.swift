@@ -22,7 +22,7 @@ public struct SafeAccount: SmartAccountProtocol  {
   
     public var entryPointAddress: EthereumAddress
     
-    public init(address: EthereumAddress? = nil, signer: EthereumAccount, rpc: EthereumRPCProtocol, bundler: BundlerClientProtocol, paymaster: PaymasterClientProtocol? = nil, safeConfig: SafeConfig = SafeConfig.entryPointV6()) async throws {
+    public init(address: EthereumAddress? = nil, signer: EthereumAccount, rpc: EthereumRPCProtocol, bundler: BundlerClientProtocol, paymaster: PaymasterClientProtocol? = nil, safeConfig: SafeConfig = SafeConfig.entryPointV7()) async throws {
         if let address {
             self.address = address
         } else {
@@ -60,7 +60,11 @@ public struct SafeAccount: SmartAccountProtocol  {
         
         let domain =  EIP712Domain(chainId: self.chainId, verifyingContract: self.safeConfig.ERC4337ModuleAddress)
         
-        let data = SafeOperation.eip712Data(domain: domain, userOperation: userOperation, validUntil:validUntil , validAfter: validAfter, entryPointAddress:entryPointAddress, entryPointVersion: self.safeConfig.entryPointVersion )
+        let data = SafeOperation.eip712Data(domain: domain, 
+                                            userOperation: userOperation,
+                                            validUntil:validUntil,
+                                            validAfter: validAfter, 
+                                            entryPointAddress:entryPointAddress)
        
         
         
@@ -119,7 +123,7 @@ public struct SafeAccount: SmartAccountProtocol  {
         return createProxyWithNonceData
     }
     
-    public static func predictAddress(signer: EthereumAccount, rpc: EthereumRPCProtocol, safeConfig: SafeConfig = SafeConfig.entryPointV6()) async throws -> EthereumAddress {
+    public static func predictAddress(signer: EthereumAccount, rpc: EthereumRPCProtocol, safeConfig: SafeConfig) async throws -> EthereumAddress {
         let nonce = safeConfig.creationNonce
         
         let safeProxyFactory = SafeProxyFactory(client: rpc , address: safeConfig.proxyFactory)

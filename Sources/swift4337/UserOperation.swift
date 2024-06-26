@@ -6,13 +6,15 @@
 //
 
 import Foundation
+import web3
 import BigInt
 
 public struct UserOperation: Encodable, Decodable {
     
     public var sender: String
     public var nonce: String
-    public var initCode: String
+    public var factory: String?
+    public var factoryData: String?
     public var callData: String
     public var preVerificationGas: String
     public var callGasLimit: String
@@ -23,9 +25,10 @@ public struct UserOperation: Encodable, Decodable {
     public var signature: String?
     
     
-    public init(sender: String, 
+    public init(sender: String,
                 nonce: String,
-                initCode: String = "0x", 
+                factory: String? = nil,
+                factoryData: String? = nil,
                 callData: String = "0x",
                 preVerificationGas: String = "0x00",
                 callGasLimit: String = "0x00",
@@ -36,7 +39,8 @@ public struct UserOperation: Encodable, Decodable {
                 signature: String = "0x000000000000000000000000") {
         self.sender = sender
         self.nonce = nonce
-        self.initCode = initCode
+        self.factory = factory
+        self.factoryData = factoryData
         self.callData = callData
         self.preVerificationGas = preVerificationGas
         self.callGasLimit = callGasLimit
@@ -46,39 +50,19 @@ public struct UserOperation: Encodable, Decodable {
         self.paymasterAndData = paymasterAndData
         self.signature = signature
     }
-}
-
-
-struct PackedUserOperation: Encodable, Decodable {
-    public var sender: String
-    public var nonce: String
-    public var initCode: String
-    public var callData: String
-    public var accountGasLimits: String
-    public var preVerificationGas: String
-    public var gasFees: String
-    public var paymasterAndData: String
-    public var signature: String?
     
-    init(sender: String, 
-         nonce: String,
-         initCode: String = "0x", 
-         callData: String = "0x", 
-         accountGasLimits: String = "0x00",
-         preVerificationGas: String = "0x00",
-         gasFees: String = "0x00",
-         paymasterAndData: String = "0x",
-         signature: String = "0x000000000000000000000000") {
-        self.sender = sender
-        self.nonce = nonce
-        self.initCode = initCode
-        self.callData = callData
-        self.accountGasLimits = accountGasLimits
-        self.preVerificationGas = preVerificationGas
-        self.gasFees = gasFees
-        self.paymasterAndData = paymasterAndData
-        self.signature = signature
+    public func getInitCode() -> String {
+
+        guard self.factory != nil && self.factoryData != nil else {
+            return "0x"
+        }
+        
+        let factoryAddress = EthereumAddress(self.factory!)
+        let initCode = [factoryAddress.asData()!.bytes, factoryData!.web3.hexData!.bytes].flatMap { $0 }
+        return initCode.hexString
     }
 }
+
+
 
 

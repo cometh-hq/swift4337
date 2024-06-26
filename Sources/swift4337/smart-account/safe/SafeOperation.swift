@@ -12,64 +12,8 @@ import BigInt
 
 struct SafeOperation {
     
-     static let EIP712_SAFE_OPERATION_TYPE_V2 = """
-                         "SafeOp":[
-                            {
-                               "type":"address",
-                               "name":"safe"
-                            },
-                            {
-                               "type":"uint256",
-                               "name":"nonce"
-                            },
-                            {
-                               "type":"bytes",
-                               "name":"initCode"
-                            },
-                            {
-                               "type":"bytes",
-                               "name":"callData"
-                            },
-                            {
-                               "type":"uint256",
-                               "name":"callGasLimit"
-                            },
-                            {
-                               "type":"uint256",
-                               "name":"verificationGasLimit"
-                            },
-                            {
-                               "type":"uint256",
-                               "name":"preVerificationGas"
-                            },
-                            {
-                               "type":"uint256",
-                               "name":"maxFeePerGas"
-                            },
-                            {
-                               "type":"uint256",
-                               "name":"maxPriorityFeePerGas"
-                            },
-                            {
-                               "type":"bytes",
-                               "name":"paymasterAndData"
-                            },
-                            {
-                               "type":"uint48",
-                               "name":"validAfter"
-                            },
-                            {
-                               "type":"uint48",
-                               "name":"validUntil"
-                            },
-                            {
-                               "type":"address",
-                               "name":"entryPoint"
-                            }
-                         ]
-        """
     
-    static let EIP712_SAFE_OPERATION_TYPE_V3 = """
+    static let EIP712_SAFE_OPERATION_TYPE = """
                         "SafeOp":[
                            {
                               "type":"address",
@@ -126,18 +70,7 @@ struct SafeOperation {
                         ]
        """
     
-    static func eip712Data(domain: EIP712Domain, userOperation: UserOperation, validUntil: BigUInt, validAfter: BigUInt, entryPointAddress: EthereumAddress, entryPointVersion:EntryPointVersion)-> Data {
-        
-        let safeOperationType: String
-            
-        switch(entryPointVersion){
-        case .V6:
-            safeOperationType = EIP712_SAFE_OPERATION_TYPE_V2
-            
-        case .V7:
-            safeOperationType = EIP712_SAFE_OPERATION_TYPE_V3
-        }
-       
+    static func eip712Data(domain: EIP712Domain, userOperation: UserOperation, validUntil: BigUInt, validAfter: BigUInt, entryPointAddress: EthereumAddress)-> Data {
         let jsonData = """
            {
               "types":{
@@ -151,7 +84,7 @@ struct SafeOperation {
                        "type":"address"
                     }
                  ],
-                 \(safeOperationType)
+                 \(EIP712_SAFE_OPERATION_TYPE)
                },
               "primaryType":"SafeOp",
               "domain":{
@@ -161,7 +94,7 @@ struct SafeOperation {
               "message":{
                  "safe":"\(userOperation.sender)",
                  "nonce":"\(userOperation.nonce)",
-                 "initCode":"\(userOperation.initCode)",
+                 "initCode":"\(userOperation.getInitCode())",
                  "callData":"\(userOperation.callData)",
                  "verificationGasLimit": "\(userOperation.verificationGasLimit)",
                  "callGasLimit": "\(userOperation.callGasLimit)",

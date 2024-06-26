@@ -33,7 +33,7 @@ class TestNetworkProvider: NetworkProviderProtocol {
         }
         
         if (method == "pm_supportedEntryPoints" || method == "eth_supportedEntryPoints") {
-            return [EthereumAddress(SafeConfig.entryPointV6().entryPointAddress)]
+            return [EthereumAddress(SafeConfig.entryPointV7().entryPointAddress)]
         }
 
         if (method == "eth_estimateUserOperationGas") {
@@ -56,7 +56,7 @@ class TestNetworkProvider: NetworkProviderProtocol {
              }
             
             if let result = try? JSONDecoder().decode(UserOperation.self, from: encoded) {
-                guard result.signature == "0x0000000000000000000000004232f7414022b3da2b1b3fc2d82d40a10eefc29c913c6801c1827dcb1c3735c8065234a4435ec0ca3a13786ecd683320661a5abb2b1dd2c2b3fc8dcf1473fcd81c" else {
+                guard result.signature == "0x00000000000000000000000049451b90ec9fe697058863e768db59acf362a28ad6d01ac4146f6f77a3670981327ff5ec9662672375f8a4dec525fd513dee129350935c4a2af75d4e7e27a21f1c" else {
                     throw TestNetworkProviderError.unexpectedValue
                 }
                 

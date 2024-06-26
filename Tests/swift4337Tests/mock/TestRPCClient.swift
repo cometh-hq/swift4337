@@ -25,7 +25,7 @@ class TestRPCClient: EthereumRPCProtocol{
     }
     
     func eth_call(_ transaction: web3.EthereumTransaction, resolution: web3.CallResolution, block: web3.EthereumBlock) async throws -> String {
-        let safeConfig = SafeConfig.entryPointV6()
+        let safeConfig = SafeConfig.entryPointV7()
         if (transaction.to == EthereumAddress(safeConfig.proxyFactory)) {
           
             //return getProxyCode
@@ -35,7 +35,7 @@ class TestRPCClient: EthereumRPCProtocol{
             return "0x0000000000000000000000000000000000000000000000000000000000000005"
             
             //Call GetOwner on test Safe
-        } else if (transaction.to == EthereumAddress("0x2ff46f26638977ae8c88e205cca407a1a9725f0b")) {
+        } else if (transaction.to == EthereumAddress("0xcfe1e7242dF565f031e1D3F645169Dda9D1230d2")) {
             return "0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000010000000000000000000000009d8A62f656a8d1615C1294fd71e9CFb3E4855A4F"
         }
         throw TestRPCClientError.notImplemented
