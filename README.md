@@ -57,7 +57,7 @@ Allows users to interact with their smart accounts, encapsulating ERC-4337 logic
 In this first version of Swift4337, we provide support for [Safe Accounts](https://safe.global/).
 
 ```swift
-let smartAccount = try await SafeAccount(signer: signer!, rpc: rpc, bundler: bundler, paymaster: paymaster)
+let smartAccount = try await SafeAccount(signer: signer, rpc: rpc, bundler: bundler, paymaster: paymaster)
 
 let userOpHash = try smartAccount.sendUserOperation(to: DEST_ADDRESSS, value: BigUInt(1))
 
