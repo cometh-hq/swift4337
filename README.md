@@ -79,7 +79,8 @@ init(address: EthereumAddress? = nil,
 - safeConfig: If not provided, the default configuration will be used.
 
 ```swift
-// these values are from the safe deployments repo
+// these values are from the safe deployments repo 
+(https://github.com/safe-global/safe-modules-deployments/tree/main/src/assets/safe-4337-module)
 public struct SafeConfig {
     public var safeSingletonL2 = "0x29fcB43b46531BcA003ddC8FCB67FFE91900C762"
     public var proxyFactory = "0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67"
