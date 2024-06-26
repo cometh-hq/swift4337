@@ -27,7 +27,7 @@ public struct SafeAccount: SmartAccountProtocol  {
         if let address {
             self.address = address
         } else {
-            self.address = try await SafeAccount.predictAddress(signer: signer, rpc: rpc)
+            self.address = try await SafeAccount.predictAddress(signer: signer, rpc: rpc, safeConfig: safeConfig)
         }
         self.signer = signer
         self.safeConfig = safeConfig

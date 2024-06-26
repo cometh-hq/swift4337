@@ -35,6 +35,15 @@ class SafeAccountTests: XCTestCase {
          XCTAssertEqual(safeAccount.address.toChecksumAddress(), expectedAddress.toChecksumAddress())
     }
     
+    
+    func testInitWalletWithoutAddressProdictAddressWithCustomSafeConfigIsOk() async throws {
+        let safeConfig = SafeConfig(creationNonce: BigUInt(2))
+        self.safeAccount = try await SafeAccount(signer: account, rpc: rpc, bundler: bundler, safeConfig:safeConfig)
+        let expectedAddress = EthereumAddress("0x2bEB15C8994C9C7b6cc6C70220Cf81381f5CC385")
+        
+         XCTAssertEqual(safeAccount.address.toChecksumAddress(), expectedAddress.toChecksumAddress())
+    }
+    
     func testGetCallDataWithOnlyValueIsOk() async throws {
         self.safeAccount = try await SafeAccount(signer: account, rpc: rpc, bundler: bundler)
         let callData = try safeAccount.getCallData(to: EthereumAddress("0xF64DA4EFa19b42ef2f897a3D533294b892e6d99E"), value: BigUInt(1), data: "0x".web3.hexData!)
