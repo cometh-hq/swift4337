@@ -11,7 +11,6 @@ import os
 
 
 public struct SafeAccount: SmartAccountProtocol  {
-    
     public let address: EthereumAddress
     public let safeConfig: SafeConfig
     public let signer: EthereumAccount
@@ -23,7 +22,7 @@ public struct SafeAccount: SmartAccountProtocol  {
   
     public var entryPointAddress: EthereumAddress
     
-    public init(address: EthereumAddress? = nil, signer: EthereumAccount, rpc: EthereumRPCProtocol, bundler: BundlerClientProtocol, paymaster: PaymasterClientProtocol? = nil, safeConfig: SafeConfig = SafeConfig()) async throws {
+    public init(address: EthereumAddress? = nil, signer: EthereumAccount, rpc: EthereumRPCProtocol, bundler: BundlerClientProtocol, paymaster: PaymasterClientProtocol? = nil, safeConfig: SafeConfig = SafeConfig.entryPointV7()) async throws {
         if let address {
             self.address = address
         } else {
@@ -41,100 +40,7 @@ public struct SafeAccount: SmartAccountProtocol  {
         self.entryPointAddress = EthereumAddress(self.safeConfig.entryPointAddress)
     }
     
-    private func safeOperation712Data(domain: EIP712Domain, userOperation: UserOperation, validUntil: BigUInt, validAfter: BigUInt, entryPointAddress: EthereumAddress)-> Data {
-        let jsonData = """
-               {
-                  "types":{
-                     "EIP712Domain":[
-                        {
-                           "name":"chainId",
-                           "type":"uint256"
-                        },
-                        {
-                           "name":"verifyingContract",
-                           "type":"address"
-                        }
-                     ],
-                     "SafeOp":[
-                        {
-                           "type":"address",
-                           "name":"safe"
-                        },
-                        {
-                           "type":"uint256",
-                           "name":"nonce"
-                        },
-                        {
-                           "type":"bytes",
-                           "name":"initCode"
-                        },
-                        {
-                           "type":"bytes",
-                           "name":"callData"
-                        },
-                        {
-                           "type":"uint256",
-                           "name":"callGasLimit"
-                        },
-                        {
-                           "type":"uint256",
-                           "name":"verificationGasLimit"
-                        },
-                        {
-                           "type":"uint256",
-                           "name":"preVerificationGas"
-                        },
-                        {
-                           "type":"uint256",
-                           "name":"maxFeePerGas"
-                        },
-                        {
-                           "type":"uint256",
-                           "name":"maxPriorityFeePerGas"
-                        },
-                        {
-                           "type":"bytes",
-                           "name":"paymasterAndData"
-                        },
-                        {
-                           "type":"uint48",
-                           "name":"validAfter"
-                        },
-                        {
-                           "type":"uint48",
-                           "name":"validUntil"
-                        },
-                        {
-                           "type":"address",
-                           "name":"entryPoint"
-                        }
-                     ]
-                  },
-                  "primaryType":"SafeOp",
-                  "domain":{
-                     "chainId": \(domain.chainId),
-                     "verifyingContract": "\(domain.verifyingContract)"
-                  },
-                  "message":{
-                     "safe":"\(userOperation.sender)",
-                     "nonce":"\(userOperation.nonce)",
-                     "initCode":"\(userOperation.initCode)",
-                     "callData":"\(userOperation.callData)",
-                     "verificationGasLimit": "\(userOperation.verificationGasLimit)",
-                     "callGasLimit": "\(userOperation.callGasLimit)",
-                     "preVerificationGas": "\(userOperation.preVerificationGas)",
-                     "maxFeePerGas": "\(userOperation.maxFeePerGas)",
-                     "maxPriorityFeePerGas": "\(userOperation.maxPriorityFeePerGas)",
-                     "paymasterAndData":"\(userOperation.paymasterAndData)",
-                     "validAfter":"\(validAfter)",
-                     "validUntil":"\(validUntil)",
-                     "entryPoint":"\(entryPointAddress.toChecksumAddress())"
-                  }
-               }
-           """
-        
-        return jsonData.data(using: .utf8)!
-    }
+
     
     public func getCallData(to: EthereumAddress, value:BigUInt, data:Data) throws -> Data{
         let encoder = ExecuteUserOpFunction(contract: self.address, to: to,
@@ -153,8 +59,15 @@ public struct SafeAccount: SmartAccountProtocol  {
         let validUntil = BigUInt(0)
         
         let domain =  EIP712Domain(chainId: self.chainId, verifyingContract: self.safeConfig.ERC4337ModuleAddress)
-        let data = self.safeOperation712Data(domain: domain, userOperation: userOperation, validUntil:validUntil , validAfter: validAfter, entryPointAddress:entryPointAddress )
+        
+        let data = try SafeOperation.eip712Data(domain: domain, 
+                                            userOperation: userOperation,
+                                            validUntil:validUntil,
+                                            validAfter: validAfter, 
+                                            entryPointAddress:entryPointAddress)
        
+        
+        
         let decoder = JSONDecoder()
         let typedData = try decoder.decode(TypedData.self, from: data)
         let signed = try self.signer.signMessage(message: typedData)
@@ -177,7 +90,12 @@ public struct SafeAccount: SmartAccountProtocol  {
         return data.value
     }
     
-    public func getInitCode() async throws -> Data {
+    
+    public func getFactoryAddress() -> EthereumAddress {
+        return EthereumAddress(self.safeConfig.proxyFactory)
+    }
+    
+    public func getFactoryData() async throws -> Data {
         let nonce = self.safeConfig.creationNonce
         
         guard let enableModulesCallData = try EnableModulesFunction(contract: EthereumAddress(self.safeConfig.safeModuleSetupAddress),
@@ -202,12 +120,10 @@ public struct SafeAccount: SmartAccountProtocol  {
             throw SmartAccountError.errorGettingInitCode
         }
         
-        let initCode = [EthereumAddress(self.safeConfig.proxyFactory).asData()!.bytes, createProxyWithNonceData.bytes].flatMap { $0 }
-        return Data(initCode)
-        
+        return createProxyWithNonceData
     }
     
-    public static func predictAddress(signer: EthereumAccount, rpc: EthereumRPCProtocol, safeConfig: SafeConfig = SafeConfig()) async throws -> EthereumAddress {
+    public static func predictAddress(signer: EthereumAccount, rpc: EthereumRPCProtocol, safeConfig: SafeConfig) async throws -> EthereumAddress {
         let nonce = safeConfig.creationNonce
         
         let safeProxyFactory = SafeProxyFactory(client: rpc , address: safeConfig.proxyFactory)

@@ -79,7 +79,7 @@ init(address: EthereumAddress? = nil,
 - safeConfig: If not provided, the default configuration will be used.
 
 ```swift
-// these values are from the safe deployments repo 
+// these values are from the safe deployments repo
 (https://github.com/safe-global/safe-modules-deployments/tree/main/src/assets/safe-4337-module)
 public struct SafeConfig {
     public var safeSingletonL2 = "0x29fcB43b46531BcA003ddC8FCB67FFE91900C762"
@@ -115,7 +115,8 @@ public protocol SmartAccountProtocol {
     func getNonce(key: BigUInt) async throws -> BigUInt
 
     // Methods to be implemented for each type of smart account
-    func getInitCode() async throws -> Data
+    func getFactoryAddress() -> EthereumAddress
+    func getFactoryData() async throws -> Data
     func getCallData(to: EthereumAddress, value:BigUInt, data:Data) throws -> Data
     func getOwners() async throws -> [EthereumAddress]
     func signUserOperation(_ userOperation: UserOperation) throws -> Data
@@ -131,7 +132,8 @@ Methods implemented directly by the SmartAccountProtocol:
 
 To be compatible with Swift4337, a smart account must provide the following methods (currently, we support Safe Accounts and provide [the implementation](https://github.com/cometh-hq/swift4337/blob/main/Sources/swift4337/smart-account/safe/SafeAccount.swift)):
 
-- **getInitCode**: Returns the InitCode required to deploy the wallet on the first user operation.
+- **getFactoryAddress**: Returns the address of the factory to be used to deploy the wallet.
+- **getFactoryData**: Returns the call data to be passed to the factory to deploy the wallet.
 - **signUserOperation**: Signs the user operation with the signer associated with the smart account.
 - **getCallData**: Returns the callData to execute the transactions parameters (to, value, data and operation).
 - **getOwners**: Returns the list of owners of the smart account.

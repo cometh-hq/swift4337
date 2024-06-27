@@ -12,14 +12,21 @@ import BigInt
 class BundlerClientTests: XCTestCase {
     let bundler = TestBundlerClient()
     
-    let userOp = UserOperation(sender: "0x2FF46F26638977AE8C88e205cCa407A1a9725F0B",
+
+
+
+
+    let userOp = UserOperation(sender: "0xcfe1e7242dF565f031e1D3F645169Dda9D1230d2",
                                nonce: "0x05",
-                               initCode: "0x", 
-                               callData: "0x7bb374280000000000000000000000000338dcd5512ae8f3c481c33eb4b6eedf632d1d2f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000406661abd00000000000000000000000000000000000000000000000000000000", preVerificationGas: "0xef1c", callGasLimit: "0x163a2",
-                               verificationGasLimit: "0x1b247",
-                               maxFeePerGas: "0x01e3fb094e",
-                               maxPriorityFeePerGas: "0x53cd81aa",
-                               signature: "0x0000000000000000000000004232f7414022b3da2b1b3fc2d82d40a10eefc29c913c6801c1827dcb1c3735c8065234a4435ec0ca3a13786ecd683320661a5abb2b1dd2c2b3fc8dcf1473fcd81c")
+                               callData: "0x7bb374280000000000000000000000000338dcd5512ae8f3c481c33eb4b6eedf632d1d2f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000406661abd00000000000000000000000000000000000000000000000000000000",
+                               preVerificationGas: "0xd8a1", callGasLimit:"0x16270",
+                               verificationGasLimit: "0x8146c",
+                               maxFeePerGas:"0x01e3fb094e",
+                               maxPriorityFeePerGas:"0x53cd81aa",
+                               paymaster:"0x4685d9587a7F72Da32dc323bfFF17627aa632C61",
+                               paymasterData:"0x00000000000000000000000000000000000000000000000000000000667d1421000000000000000000000000000000000000000000000000000000000000000026e7da98c314096d74cd7fb9d2e3bf074e20dd71f91ab6e9b7c0ad4d4ac057f15ad0d942b6880daddbf9d0ff9791c05ff64528f3428c3d4f3ee45cb5c12250081c", paymasterVerificationGasLimit:"0x4e09",
+                               paymasterPostOpGasLimit:"0x1",
+                               signature: "0x000000000000000000000000f3b1844e8b4e5ce91db47894f7d60e5dc043f7b363f467c727442c7d4b1d8a1f1d1ce48574862154d61e2f144be579669b68e0fb08d25039648e3d6d5b75257c1c")
     
     override func setUp(){
         super.setUp()
@@ -31,43 +38,48 @@ class BundlerClientTests: XCTestCase {
     
     func testSupportedEntryPointsIsOk() async throws {
         let entrypoints = try await self.bundler.eth_supportedEntryPoints()
-        XCTAssertEqual(entrypoints[0].toChecksumAddress(), SafeConfig().entryPointAddress )
+        XCTAssertEqual(entrypoints[0].toChecksumAddress(), SafeConfig.entryPointV7().entryPointAddress )
     }
     
     func testEstimateUserOperationGasIsOk() async throws {
 
-        let userOperationestimation = try await self.bundler.eth_estimateUserOperationGas(self.userOp, entryPoint: EthereumAddress(SafeConfig().entryPointAddress))
+        let userOperationestimation = try await self.bundler.eth_estimateUserOperationGas(self.userOp, entryPoint: EthereumAddress(SafeConfig.entryPointV7().entryPointAddress))
         XCTAssertEqual(userOperationestimation.callGasLimit, "12100" )
         XCTAssertEqual(userOperationestimation.preVerificationGas, "60460" )
         XCTAssertEqual(userOperationestimation.verificationGasLimit, "285642" )
     }
     
     func testSendUserOperationIsOk() async throws {
-        let userOperationHash = try await self.bundler.eth_sendUserOperation(self.userOp, entryPoint: EthereumAddress(SafeConfig().entryPointAddress))
+        let userOperationHash = try await self.bundler.eth_sendUserOperation(self.userOp, entryPoint: EthereumAddress(SafeConfig.entryPointV7().entryPointAddress))
         XCTAssertEqual(userOperationHash, "0xb38a2faf4b5c716eff634af472206f28574cd5104c69d97a315c3303ddb5fdbd" )
     }
     
     func testGetUserOperationByHashIsOk() async throws {
         let response = try await self.bundler.eth_getUserOperationByHash("0xb38a2faf4b5c716eff634af472206f28574cd5104c69d97a315c3303ddb5fdbd")
        
-        XCTAssertEqual(response?.entryPoint, SafeConfig().entryPointAddress)
+        XCTAssertEqual(response?.entryPoint, SafeConfig.entryPointV7().entryPointAddress)
         XCTAssertEqual(response?.transactionHash, "0x87004b8eda9e46071f0feb28ffb32a94d9475edb76000102bca104cc78a14291")
         XCTAssertEqual(response?.blockHash, "0x505de34521e76be46c6f6c28ca939e75708375a12e74abc8f043916f4a4b01d5" )
         XCTAssertEqual(response?.blockNumber, "0x5d99da" )
         
         let userOperation = response!.userOperation
         
-        XCTAssertEqual(userOperation.sender, "0x2FF46F26638977AE8C88e205cCa407A1a9725F0B" )
+        XCTAssertEqual(userOperation.sender, "0xcfe1e7242dF565f031e1D3F645169Dda9D1230d2" )
         XCTAssertEqual(userOperation.callGasLimit, "0x163a2" )
         XCTAssertEqual(userOperation.preVerificationGas, "0xef1c" )
         XCTAssertEqual(userOperation.verificationGasLimit, "0x1b247" )
         XCTAssertEqual(userOperation.maxFeePerGas, "0x01e3fb094e" )
         XCTAssertEqual(userOperation.maxPriorityFeePerGas, "0x53cd81aa" )
-        XCTAssertEqual(userOperation.paymasterAndData, "0x" )
+        XCTAssertEqual(userOperation.paymaster, nil )
+        XCTAssertEqual(userOperation.paymasterData, nil )
+        XCTAssertEqual(userOperation.paymasterVerificationGasLimit, nil )
+        XCTAssertEqual(userOperation.paymasterPostOpGasLimit, nil )
+        XCTAssertEqual(try userOperation.getPaymasterAndData(), "0x" )
         XCTAssertEqual(userOperation.callData, "0x7bb374280000000000000000000000000338dcd5512ae8f3c481c33eb4b6eedf632d1d2f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000406661abd00000000000000000000000000000000000000000000000000000000" )
-        XCTAssertEqual(userOperation.initCode, "0x" )
+        XCTAssertEqual(userOperation.factory, nil )
+        XCTAssertEqual(userOperation.factoryData, nil )
         XCTAssertEqual(userOperation.nonce, "0x05" )
-        XCTAssertEqual(userOperation.signature, "0x0000000000000000000000004232f7414022b3da2b1b3fc2d82d40a10eefc29c913c6801c1827dcb1c3735c8065234a4435ec0ca3a13786ecd683320661a5abb2b1dd2c2b3fc8dcf1473fcd81c" )
+        XCTAssertEqual(userOperation.signature, "0x00000000000000000000000049451b90ec9fe697058863e768db59acf362a28ad6d01ac4146f6f77a3670981327ff5ec9662672375f8a4dec525fd513dee129350935c4a2af75d4e7e27a21f1c" )
     }
     
     
@@ -76,7 +88,7 @@ class BundlerClientTests: XCTestCase {
         
         
         XCTAssertEqual(response?.userOpHash, "0xb38a2faf4b5c716eff634af472206f28574cd5104c69d97a315c3303ddb5fdbd")
-        XCTAssertEqual(response?.sender, "0x2FF46F26638977AE8C88e205cCa407A1a9725F0B")
+        XCTAssertEqual(response?.sender, "0xcfe1e7242dF565f031e1D3F645169Dda9D1230d2")
         XCTAssertEqual(response?.nonce, "0x05" )
         XCTAssertEqual(response?.paymaster, "0xDFF7FA1077Bce740a6a212b3995990682c0Ba66d" )
         XCTAssertEqual(response?.actualGasUsed, "0x27708" )

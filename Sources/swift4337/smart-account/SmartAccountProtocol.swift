@@ -46,7 +46,8 @@ public protocol SmartAccountProtocol {
     func getNonce(key: BigUInt) async throws -> BigUInt
    
     // Methods to be implemented for each type of smart account
-    func getInitCode() async throws -> Data
+    func getFactoryAddress() -> EthereumAddress
+    func getFactoryData() async throws -> Data
     func getCallData(to: EthereumAddress, value:BigUInt, data:Data) throws -> Data
     func getOwners() async throws -> [EthereumAddress]
     func signUserOperation(_ userOperation: UserOperation) throws -> Data
@@ -70,13 +71,16 @@ extension SmartAccountProtocol{
         let callData = try self.getCallData(to: to, value: value, data: data)
         let nonce = try await self.getNonce()
         
-        var initCode = Data()
+        var factory:String?
+        var factoryData:String?
         if (try await self.isDeployed() ==  false) {
-            initCode = try await self.getInitCode()
+            factory = self.getFactoryAddress().toChecksumAddress()
+            factoryData = try await self.getFactoryData().web3.hexString
         }
         var userOperation = UserOperation(sender: self.address.toChecksumAddress(),
                                           nonce: nonce.web3.hexString,
-                                          initCode: initCode.web3.hexString,
+                                          factory: factory,
+                                          factoryData: factoryData,
                                           callData: callData.web3.hexString)
         
         let gasEstimator = RPCGasEstimator(self.rpc)
@@ -91,10 +95,23 @@ extension SmartAccountProtocol{
         userOperation.callGasLimit =  estimation.callGasLimit
         
         if let sponsorData = try await paymaster?.pm_sponsorUserOperation(userOperation, entryPoint: self.entryPointAddress) {
-            userOperation.paymasterAndData = sponsorData.paymasterAndData
-            userOperation.callGasLimit = sponsorData.callGasLimit
-            userOperation.preVerificationGas = sponsorData.preVerificationGas
-            userOperation.verificationGasLimit = sponsorData.verificationGasLimit
+            userOperation.paymaster = sponsorData.paymaster
+            userOperation.paymasterData = sponsorData.paymasterData
+            userOperation.paymasterVerificationGasLimit = sponsorData.paymasterVerificationGasLimit
+            userOperation.paymasterPostOpGasLimit = sponsorData.paymasterPostOpGasLimit
+            
+            if let preVerificationGas = sponsorData.preVerificationGas {
+                userOperation.preVerificationGas = preVerificationGas
+            }
+            
+            if let verificationGasLimit = sponsorData.verificationGasLimit {
+                userOperation.verificationGasLimit = verificationGasLimit
+            }
+            
+            if let callGasLimit = sponsorData.callGasLimit {
+                userOperation.callGasLimit = callGasLimit
+            }
+      
         }
         
         return userOperation
