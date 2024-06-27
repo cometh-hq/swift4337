@@ -9,6 +9,10 @@ import Foundation
 import web3
 import BigInt
 
+public enum UserOperationError: Error, Equatable {
+    case errorGeneratingPaymasterAndData
+}
+
 public struct UserOperation: Encodable, Decodable {
     
     public var sender: String
@@ -16,12 +20,19 @@ public struct UserOperation: Encodable, Decodable {
     public var factory: String?
     public var factoryData: String?
     public var callData: String
+    
     public var preVerificationGas: String
     public var callGasLimit: String
+    public var verificationGasLimit: String
+    
     public var maxFeePerGas: String
     public var maxPriorityFeePerGas: String
-    public var verificationGasLimit: String
-    public var paymasterAndData: String
+    
+    public var paymaster: String?
+    public var paymasterData: String?
+    public var paymasterVerificationGasLimit: String?
+    public var paymasterPostOpGasLimit: String?
+
     public var signature: String?
     
     
@@ -35,7 +46,10 @@ public struct UserOperation: Encodable, Decodable {
                 verificationGasLimit: String = "0x00",
                 maxFeePerGas: String = "0x00",
                 maxPriorityFeePerGas: String = "0x00",
-                paymasterAndData: String = "0x",
+                paymaster: String? = nil,
+                paymasterData: String? = nil,
+                paymasterVerificationGasLimit: String? = nil,
+                paymasterPostOpGasLimit: String? = nil,
                 signature: String = "0x000000000000000000000000") {
         self.sender = sender
         self.nonce = nonce
@@ -47,8 +61,12 @@ public struct UserOperation: Encodable, Decodable {
         self.maxFeePerGas = maxFeePerGas
         self.maxPriorityFeePerGas = maxPriorityFeePerGas
         self.verificationGasLimit = verificationGasLimit
-        self.paymasterAndData = paymasterAndData
         self.signature = signature
+        
+        self.paymaster = paymaster
+        self.paymasterData = paymasterData
+        self.paymasterVerificationGasLimit = paymasterVerificationGasLimit
+        self.paymasterPostOpGasLimit = paymasterPostOpGasLimit
     }
     
     public func getInitCode() -> String {
@@ -60,6 +78,36 @@ public struct UserOperation: Encodable, Decodable {
         let factoryAddress = EthereumAddress(self.factory!)
         let initCode = [factoryAddress.asData()!.bytes, factoryData!.web3.hexData!.bytes].flatMap { $0 }
         return initCode.hexString
+    }
+    
+    public func getPaymasterAndData() throws -> String {
+        guard self.paymaster != nil &&
+                self.paymasterData != nil &&
+                self.paymasterVerificationGasLimit != nil &&
+                self.paymasterPostOpGasLimit != nil
+                
+        else {
+            return "0x"
+        }
+        
+        let verificationGasLimit = BigUInt(hex: self.paymasterVerificationGasLimit!)
+        let postOpGasLimit = BigUInt(hex: self.paymasterPostOpGasLimit!)
+        
+        guard verificationGasLimit != nil && postOpGasLimit != nil else {
+            throw UserOperationError.errorGeneratingPaymasterAndData
+        }
+        
+        let verificationGasLimitEncoded =  try ABIEncoder.encode(verificationGasLimit!, uintSize: 128)
+        let postOpGasLimitEncoded =  try ABIEncoder.encode(BigUInt(postOpGasLimit!), uintSize: 128)
+        
+        let paymasterAndData = [EthereumAddress(self.paymaster!).asData()!.bytes,
+                                verificationGasLimitEncoded.bytes, 
+                                postOpGasLimitEncoded.bytes,
+                                self.paymasterData!.web3.hexData!.bytes
+                                
+        ].flatMap { $0 }
+        
+        return paymasterAndData.hexString
     }
 }
 

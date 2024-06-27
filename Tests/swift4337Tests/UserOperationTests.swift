@@ -22,5 +22,19 @@ class UserOperationTests: XCTestCase {
         
         XCTAssertEqual(userOperation.getInitCode(), expected)
     }
+    
+    func testGetPaymasterDataIsOk() async throws {
+        let userOperation  = UserOperation(sender: "0xcfe1e7242dF565f031e1D3F645169Dda9D1230d2", nonce: "0x0", paymaster: "0x4685d9587a7F72Da32dc323bfFF17627aa632C61",
+                                           paymasterData: "0x00000000000000000000000000000000000000000000000000000000667d1421000000000000000000000000000000000000000000000000000000000000000026e7da98c314096d74cd7fb9d2e3bf074e20dd71f91ab6e9b7c0ad4d4ac057f15ad0d942b6880daddbf9d0ff9791c05ff64528f3428c3d4f3ee45cb5c12250081c",
+                                           paymasterVerificationGasLimit: "0x4e09",
+                                           paymasterPostOpGasLimit: "0x1")
+        
+        let paymasterAndData = try userOperation.getPaymasterAndData()
+        let expected = "0x4685d9587a7f72da32dc323bfff17627aa632c6100000000000000000000000000004e090000000000000000000000000000000100000000000000000000000000000000000000000000000000000000667d1421000000000000000000000000000000000000000000000000000000000000000026e7da98c314096d74cd7fb9d2e3bf074e20dd71f91ab6e9b7c0ad4d4ac057f15ad0d942b6880daddbf9d0ff9791c05ff64528f3428c3d4f3ee45cb5c12250081c"
+        
+        
+        
+        XCTAssertEqual(paymasterAndData, expected)
+    }
 
 }

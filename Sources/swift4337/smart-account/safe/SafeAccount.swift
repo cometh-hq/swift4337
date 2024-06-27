@@ -60,7 +60,7 @@ public struct SafeAccount: SmartAccountProtocol  {
         
         let domain =  EIP712Domain(chainId: self.chainId, verifyingContract: self.safeConfig.ERC4337ModuleAddress)
         
-        let data = SafeOperation.eip712Data(domain: domain, 
+        let data = try SafeOperation.eip712Data(domain: domain, 
                                             userOperation: userOperation,
                                             validUntil:validUntil,
                                             validAfter: validAfter, 

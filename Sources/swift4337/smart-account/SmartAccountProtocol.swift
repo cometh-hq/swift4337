@@ -95,10 +95,23 @@ extension SmartAccountProtocol{
         userOperation.callGasLimit =  estimation.callGasLimit
         
         if let sponsorData = try await paymaster?.pm_sponsorUserOperation(userOperation, entryPoint: self.entryPointAddress) {
-            userOperation.paymasterAndData = sponsorData.paymasterAndData
-            userOperation.callGasLimit = sponsorData.callGasLimit
-            userOperation.preVerificationGas = sponsorData.preVerificationGas
-            userOperation.verificationGasLimit = sponsorData.verificationGasLimit
+            userOperation.paymaster = sponsorData.paymaster
+            userOperation.paymasterData = sponsorData.paymasterData
+            userOperation.paymasterVerificationGasLimit = sponsorData.paymasterVerificationGasLimit
+            userOperation.paymasterPostOpGasLimit = sponsorData.paymasterPostOpGasLimit
+            
+            if let preVerificationGas = sponsorData.preVerificationGas {
+                userOperation.preVerificationGas = preVerificationGas
+            }
+            
+            if let verificationGasLimit = sponsorData.verificationGasLimit {
+                userOperation.verificationGasLimit = verificationGasLimit
+            }
+            
+            if let callGasLimit = sponsorData.callGasLimit {
+                userOperation.callGasLimit = callGasLimit
+            }
+      
         }
         
         return userOperation

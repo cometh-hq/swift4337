@@ -70,7 +70,7 @@ struct SafeOperation {
                         ]
        """
     
-    static func eip712Data(domain: EIP712Domain, userOperation: UserOperation, validUntil: BigUInt, validAfter: BigUInt, entryPointAddress: EthereumAddress)-> Data {
+    static func eip712Data(domain: EIP712Domain, userOperation: UserOperation, validUntil: BigUInt, validAfter: BigUInt, entryPointAddress: EthereumAddress) throws -> Data {
         let jsonData = """
            {
               "types":{
@@ -101,7 +101,7 @@ struct SafeOperation {
                  "preVerificationGas": "\(userOperation.preVerificationGas)",
                  "maxFeePerGas": "\(userOperation.maxFeePerGas)",
                  "maxPriorityFeePerGas": "\(userOperation.maxPriorityFeePerGas)",
-                 "paymasterAndData":"\(userOperation.paymasterAndData)",
+                 "paymasterAndData":"\(try userOperation.getPaymasterAndData())",
                  "validAfter":"\(validAfter)",
                  "validUntil":"\(validUntil)",
                  "entryPoint":"\(entryPointAddress.toChecksumAddress())"

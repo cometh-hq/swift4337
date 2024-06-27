@@ -7,14 +7,22 @@
 import Foundation
 import web3
 
+
 public struct SponsorUserOperationResponse: Decodable{
-    public let paymasterAndData: String
-    public let preVerificationGas: String
-    public let verificationGasLimit:  String
-    public let callGasLimit: String
+    public let paymaster: String
+    public let paymasterData: String
+    public let paymasterVerificationGasLimit: String
+    public let paymasterPostOpGasLimit: String
+    public let callGasLimit: String?
+    public let preVerificationGas: String?
+    public let verificationGasLimit:  String?
     
-    public init(paymasterAndData: String, preVerificationGas: String, verificationGasLimit: String, callGasLimit: String) {
-        self.paymasterAndData = paymasterAndData
+    public init(paymaster: String, paymasterData: String, paymasterVerificationGasLimit: String, paymasterPostOpGasLimit: String, callGasLimit: String? = nil, preVerificationGas: String? = nil, verificationGasLimit: String? = nil) {
+        self.paymaster = paymaster
+        self.paymasterData = paymasterData
+        self.paymasterVerificationGasLimit = paymasterVerificationGasLimit
+        self.paymasterPostOpGasLimit = paymasterPostOpGasLimit
+        
         self.preVerificationGas = preVerificationGas
         self.verificationGasLimit = verificationGasLimit
         self.callGasLimit = callGasLimit

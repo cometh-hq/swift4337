@@ -56,7 +56,8 @@ class TestNetworkProvider: NetworkProviderProtocol {
              }
             
             if let result = try? JSONDecoder().decode(UserOperation.self, from: encoded) {
-                guard result.signature == "0x00000000000000000000000049451b90ec9fe697058863e768db59acf362a28ad6d01ac4146f6f77a3670981327ff5ec9662672375f8a4dec525fd513dee129350935c4a2af75d4e7e27a21f1c" else {
+               
+                guard result.signature == "0x000000000000000000000000f3b1844e8b4e5ce91db47894f7d60e5dc043f7b363f467c727442c7d4b1d8a1f1d1ce48574862154d61e2f144be579669b68e0fb08d25039648e3d6d5b75257c1c" else {
                     throw TestNetworkProviderError.unexpectedValue
                 }
                 

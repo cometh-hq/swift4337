@@ -12,13 +12,21 @@ import BigInt
 class BundlerClientTests: XCTestCase {
     let bundler = TestBundlerClient()
     
+
+
+
+
     let userOp = UserOperation(sender: "0xcfe1e7242dF565f031e1D3F645169Dda9D1230d2",
                                nonce: "0x05",
-                               callData: "0x7bb374280000000000000000000000000338dcd5512ae8f3c481c33eb4b6eedf632d1d2f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000406661abd00000000000000000000000000000000000000000000000000000000", preVerificationGas: "0xef1c", callGasLimit: "0x163a2",
-                               verificationGasLimit: "0x1b247",
-                               maxFeePerGas: "0x01e3fb094e",
-                               maxPriorityFeePerGas: "0x53cd81aa",
-                               signature: "0x00000000000000000000000049451b90ec9fe697058863e768db59acf362a28ad6d01ac4146f6f77a3670981327ff5ec9662672375f8a4dec525fd513dee129350935c4a2af75d4e7e27a21f1c")
+                               callData: "0x7bb374280000000000000000000000000338dcd5512ae8f3c481c33eb4b6eedf632d1d2f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000406661abd00000000000000000000000000000000000000000000000000000000",
+                               preVerificationGas: "0xd8a1", callGasLimit:"0x16270",
+                               verificationGasLimit: "0x8146c",
+                               maxFeePerGas:"0x01e3fb094e",
+                               maxPriorityFeePerGas:"0x53cd81aa",
+                               paymaster:"0x4685d9587a7F72Da32dc323bfFF17627aa632C61",
+                               paymasterData:"0x00000000000000000000000000000000000000000000000000000000667d1421000000000000000000000000000000000000000000000000000000000000000026e7da98c314096d74cd7fb9d2e3bf074e20dd71f91ab6e9b7c0ad4d4ac057f15ad0d942b6880daddbf9d0ff9791c05ff64528f3428c3d4f3ee45cb5c12250081c", paymasterVerificationGasLimit:"0x4e09",
+                               paymasterPostOpGasLimit:"0x1",
+                               signature: "0x000000000000000000000000f3b1844e8b4e5ce91db47894f7d60e5dc043f7b363f467c727442c7d4b1d8a1f1d1ce48574862154d61e2f144be579669b68e0fb08d25039648e3d6d5b75257c1c")
     
     override func setUp(){
         super.setUp()
@@ -62,7 +70,11 @@ class BundlerClientTests: XCTestCase {
         XCTAssertEqual(userOperation.verificationGasLimit, "0x1b247" )
         XCTAssertEqual(userOperation.maxFeePerGas, "0x01e3fb094e" )
         XCTAssertEqual(userOperation.maxPriorityFeePerGas, "0x53cd81aa" )
-        XCTAssertEqual(userOperation.paymasterAndData, "0x" )
+        XCTAssertEqual(userOperation.paymaster, nil )
+        XCTAssertEqual(userOperation.paymasterData, nil )
+        XCTAssertEqual(userOperation.paymasterVerificationGasLimit, nil )
+        XCTAssertEqual(userOperation.paymasterPostOpGasLimit, nil )
+        XCTAssertEqual(try userOperation.getPaymasterAndData(), "0x" )
         XCTAssertEqual(userOperation.callData, "0x7bb374280000000000000000000000000338dcd5512ae8f3c481c33eb4b6eedf632d1d2f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000406661abd00000000000000000000000000000000000000000000000000000000" )
         XCTAssertEqual(userOperation.factory, nil )
         XCTAssertEqual(userOperation.factoryData, nil )
