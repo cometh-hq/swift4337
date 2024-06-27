@@ -21,7 +21,7 @@ Swift4337 is a Swift SDK for building with [ERC-4337](https://eips.ethereum.org/
 Use Xcode to add to the project (**File -> Swift Packages**) or add this to your `Package.swift` file:
 
 ```swift
-.package(url: "https://github.com/cometh-hq/swift4337", from: "1.0.0")
+.package(url: "https://github.com/cometh-hq/swift4337", from: "0.1.0")
 ```
 
 ## Getting Started
