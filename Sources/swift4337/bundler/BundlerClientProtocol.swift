@@ -90,9 +90,9 @@ public struct GetUserOperationReceiptResponse: Decodable{
 public struct GetUserOperationByHashResponse: Decodable{
     public let userOperation: UserOperation
     public let entryPoint: String
-    public let transactionHash: String
-    public let blockHash: String
-    public let blockNumber: String
+    public let transactionHash: String?
+    public let blockHash: String?
+    public let blockNumber: String?
     
     public init(userOperation: UserOperation, entryPoint: String, transactionHash: String, blockHash: String, blockNumber: String) {
         self.userOperation = userOperation
