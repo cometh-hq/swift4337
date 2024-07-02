@@ -31,6 +31,7 @@ public protocol SmartAccountProtocol {
     
     var address: EthereumAddress {get}
     var signer: EthereumAccount {get}
+    var gasEstimator: GasEstimatorProtocol {get}
     
     var rpc: EthereumRPCProtocol {get}
     var bundler: BundlerClientProtocol {get}
@@ -83,7 +84,6 @@ extension SmartAccountProtocol{
                                           factoryData: factoryData,
                                           callData: callData.web3.hexString)
         
-        let gasEstimator = RPCGasEstimator(self.rpc)
         let gasFee = try await gasEstimator.getGasFees()
         
         userOperation.maxFeePerGas = gasFee.maxFeePerGas.web3.hexString

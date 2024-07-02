@@ -22,7 +22,9 @@ public struct SafeAccount: SmartAccountProtocol  {
   
     public var entryPointAddress: EthereumAddress
     
-    public init(address: EthereumAddress? = nil, signer: EthereumAccount, rpc: EthereumRPCProtocol, bundler: BundlerClientProtocol, paymaster: PaymasterClientProtocol? = nil, safeConfig: SafeConfig = SafeConfig.entryPointV7()) async throws {
+    public let gasEstimator: GasEstimatorProtocol
+    
+    public init(address: EthereumAddress? = nil, signer: EthereumAccount, rpc: EthereumRPCProtocol, bundler: BundlerClientProtocol, paymaster: PaymasterClientProtocol? = nil, safeConfig: SafeConfig = SafeConfig.entryPointV7(), gasEstimator: GasEstimatorProtocol? = nil) async throws {
         if let address {
             self.address = address
         } else {
@@ -38,6 +40,14 @@ public struct SafeAccount: SmartAccountProtocol  {
         self.chainId = rpc.network.intValue
         
         self.entryPointAddress = EthereumAddress(self.safeConfig.entryPointAddress)
+        
+        if let estimator = gasEstimator{
+            self.gasEstimator = estimator
+        } else {
+            self.gasEstimator = RPCGasEstimator(rpc)
+        }
+            
+        
     }
     
 
