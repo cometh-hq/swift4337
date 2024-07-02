@@ -116,4 +116,13 @@ class SafeAccountTests: XCTestCase {
         let owners = try await self.safeAccount.getOwners()
         XCTAssertEqual(owners[0].toChecksumAddress(), account.address.toChecksumAddress())
     }
+    
+    
+    func testInitWalletWithCustomGasEstimatorIsOk() async throws {
+      
+        let gasEstimator = RPCGasEstimator(rpc, minBaseFee: BigUInt(50000000))
+        self.safeAccount = try await SafeAccount(signer: account, rpc: rpc, bundler: bundler, gasEstimator: gasEstimator)
+       
+        XCTAssertEqual(safeAccount.gasEstimator.minBaseFee, BigUInt(50000000))
+    }
 }
