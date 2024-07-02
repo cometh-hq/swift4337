@@ -7,6 +7,7 @@
 
 import Foundation
 import web3
+import os
 
 public struct Log: Decodable {
     public let logIndex: String
@@ -138,6 +139,7 @@ public extension BundlerClientProtocol {
                 throw EthereumClientError.unexpectedReturnValue
             }
         } catch {
+            Logger.defaultLogger.error("eth_sendUserOperation error")
             throw failureHandler(error)
         }
     }
@@ -155,6 +157,7 @@ public extension BundlerClientProtocol {
                 throw EthereumClientError.unexpectedReturnValue
             }
         } catch {
+            Logger.defaultLogger.error("eth_estimateUserOperationGas error")
             throw failureHandler(error)
         }
     }
@@ -172,6 +175,7 @@ public extension BundlerClientProtocol {
                 throw EthereumClientError.unexpectedReturnValue
             }
         } catch {
+            Logger.defaultLogger.error("eth_getUserOperationByHash error")
             throw failureHandler(error)
         }
     }
@@ -188,6 +192,7 @@ public extension BundlerClientProtocol {
                 throw EthereumClientError.unexpectedReturnValue
             }
         } catch {
+            Logger.defaultLogger.error("eth_getUserOperationReceipt error")
             throw failureHandler(error)
         }
     }
@@ -205,6 +210,7 @@ public extension BundlerClientProtocol {
                 throw EthereumClientError.unexpectedReturnValue
             }
         } catch {
+            Logger.defaultLogger.error("eth_supportedEntryPoints error")
             throw failureHandler(error)
         }
     }

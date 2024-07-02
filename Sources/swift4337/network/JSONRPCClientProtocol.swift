@@ -1,5 +1,5 @@
 //
-//  BaseNetworkClient.swift
+//  JSONRPCClientProtocol.swift
 //
 //
 //  Created by Frederic DE MATOS on 19/06/2024.

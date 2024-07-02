@@ -6,6 +6,7 @@
 //
 import Foundation
 import web3
+import os
 
 
 public struct SponsorUserOperationResponse: Decodable{
@@ -49,6 +50,7 @@ public extension PaymasterClientProtocol{
                 throw EthereumClientError.unexpectedReturnValue
             }
         } catch {
+            Logger.defaultLogger.error("pm_sponsorUserOperation error")
             throw failureHandler(error)
         }
     }
@@ -65,6 +67,7 @@ public extension PaymasterClientProtocol{
                 throw EthereumClientError.unexpectedReturnValue
             }
         } catch {
+            Logger.defaultLogger.error("pm_sponsorUserOperation error")
             throw failureHandler(error)
         }
     }

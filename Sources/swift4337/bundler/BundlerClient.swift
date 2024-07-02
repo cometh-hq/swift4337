@@ -18,6 +18,6 @@ open class BundlerClient: BundlerClientProtocol {
         networkQueue.maxConcurrentOperationCount = 4
                
         let session = URLSession(configuration: URLSession.shared.configuration, delegate: nil, delegateQueue: networkQueue)
-        self.networkProvider = HttpNetworkProvider(session: session, url: url)
+        self.networkProvider = JSONRPCProvider(session: session, url: url)
     }
 }
