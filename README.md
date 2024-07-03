@@ -21,7 +21,7 @@ Swift4337 is a Swift SDK for building with [ERC-4337](https://eips.ethereum.org/
 Use Xcode to add to the project (**File -> Swift Packages**) or add this to your `Package.swift` file:
 
 ```swift
-.package(url: "https://github.com/cometh-hq/swift4337", from: "0.1.0")
+.package(url: "https://github.com/cometh-hq/swift4337", from: "0.2.0")
 ```
 
 ## Getting Started
@@ -71,23 +71,24 @@ init(address: EthereumAddress? = nil,
      rpc: EthereumRPCProtocol,
      bundler: BundlerClientProtocol,
      paymaster: PaymasterClientProtocol? = nil,
-     safeConfig: SafeConfig = SafeConfig())
+     safeConfig: SafeConfig = SafeConfig.entryPointV7(),
+     gasEstimator: GasEstimatorProtocol? = nil)
 ```
 
 - address: If nil, the address of the Safe account will be predicted based on the signer address.
 - paymaster: If specified, it will be used when preparing the user operation to sponsor gas fees.
 - safeConfig: If not provided, the default configuration will be used.
+- gasEstimator: By default will use an RPCGasEstimator.
 
 ```swift
 // these values are from the safe deployments repo
 (https://github.com/safe-global/safe-modules-deployments/tree/main/src/assets/safe-4337-module)
-public struct SafeConfig {
-    public var safeSingletonL2 = "0x29fcB43b46531BcA003ddC8FCB67FFE91900C762"
-    public var proxyFactory = "0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67"
-    public var ERC4337ModuleAddress = "0xa581c4A4DB7175302464fF3C06380BC3270b4037"
-    public var safeModuleSetupAddress = "0x2dd68b007B46fBe91B9A7c3EDa5A7a1063cB5b47"
-    public var entryPointAddress = "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
-    public var creationNonce = BigUInt(0)
+public static func entryPointV7() ->SafeConfig{
+    return SafeConfig(safeSingletonL2: "0x29fcB43b46531BcA003ddC8FCB67FFE91900C762",
+                      proxyFactory: "0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67",
+                      ERC4337ModuleAddress: "0x75cf11467937ce3F2f357CE24ffc3DBF8fD5c226",
+                      safeModuleSetupAddress: "0x2dd68b007B46fBe91B9A7c3EDa5A7a1063cB5b47",
+                      entryPointAddress: "0x0000000071727De22E5E9d8BAf0edAc6f37da032")
 }
 ```
 
@@ -100,6 +101,7 @@ public protocol SmartAccountProtocol {
 
     var address: EthereumAddress {get}
     var signer: EthereumAccount {get}
+    var gasEstimator: GasEstimatorProtocol {get}
 
     var rpc: EthereumRPCProtocol {get}
     var bundler: BundlerClientProtocol {get}
