@@ -51,7 +51,6 @@ public struct SafeAccount: SmartAccountProtocol  {
     }
     
 
-    
     public func getCallData(to: EthereumAddress, value:BigUInt, data:Data) throws -> Data{
         let encoder = ExecuteUserOpFunction(contract: self.address, to: to,
                        value: value, calldata:data , operation: 0)
