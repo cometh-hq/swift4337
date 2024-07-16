@@ -16,7 +16,7 @@ public struct MultiSendTransaction  {
     let value: BigUInt
     let data: Data
     
-    init(op: BigUInt, to: EthereumAddress, value: BigUInt = BigUInt(0), data: Data) {
+    init(op: BigUInt = BigUInt(1), to: EthereumAddress, value: BigUInt = BigUInt(0), data: Data) {
         self.op = op
         self.to = to
         self.value = value
@@ -31,13 +31,16 @@ public struct MultiSendTransaction  {
         return Data([opEncoded.bytes, self.to.asData()!.bytes, valueEncoded.bytes,  dataSizeEncoded.bytes, self.data.bytes].flatMap { $0 })
         
     }
+}
+
+extension [MultiSendTransaction] {
     
-    public static func pack(transactions: [MultiSendTransaction]) throws -> Data {
-        let packedTx = try transactions.flatMap { try $0.pack() }
+    public func pack() throws -> Data {
+        let packedTx = try self.flatMap { try $0.pack() }
         return Data(packedTx)
     }
-
 }
+
 
 struct MultiSendFunction: ABIFunction {
     

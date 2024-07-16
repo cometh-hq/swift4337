@@ -30,7 +30,7 @@ public struct EIP712Domain {
 public protocol SmartAccountProtocol {
     
     var address: EthereumAddress {get}
-    var signer: EthereumAccount {get}
+    var signer: EthereumAccountProtocol {get}
     var gasEstimator: GasEstimatorProtocol {get}
     
     var rpc: EthereumRPCProtocol {get}
