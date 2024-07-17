@@ -103,48 +103,6 @@ public struct SafeAccount: SmartAccountProtocol  {
     public func getFactoryAddress() -> EthereumAddress {
         return EthereumAddress(self.safeConfig.proxyFactory)
     }
-
-    public func passkeySignerFactoryData() async throws -> Data {
-        
-        let nonce = self.safeConfig.creationNonce
-        
-        guard let enableModulesCallData = try EnableModulesFunction(contract: EthereumAddress(self.safeConfig.safeModuleSetupAddress),
-                                                                    modules: [EthereumAddress(self.safeConfig.ERC4337ModuleAddress)]).transaction().data else {
-            throw SmartAccountError.errorGettingInitCode
-        }
-        
-        guard let passkeySigner  = self.signer as? PasskeySigner  else {
-            throw SmartAccountError.errorGettingInitCode
-        }
-        
-        let verifiers = EthereumAddress(self.safeConfig.safeWebAuthnSharedSignerAddress).asNumber()!
-        
-        guard let configureData = try ConfigureFunction(contract: EthereumAddress(self.safeConfig.safeWebAuthnSharedSignerAddress), x: passkeySigner.passkey.publicX, y: passkeySigner.passkey.publicY, verifiers: verifiers).transaction().data else {
-            throw SmartAccountError.errorGettingInitCode
-        }
-        
-        let multiSendData = try [MultiSendTransaction(to:  EthereumAddress(self.safeConfig.safeModuleSetupAddress), data: enableModulesCallData),MultiSendTransaction(to:  EthereumAddress(self.safeConfig.safeWebAuthnSharedSignerAddress), data: configureData),
-       ].pack()
-        
-        guard let setupCallData = try SetupFunction(contract: EthereumAddress(self.safeConfig.safeSingletonL2),
-                                                    _owners: [self.signer.address],
-                                                    _threshold: BigUInt(1),
-                                                    to: EthereumAddress(self.safeConfig.safeMultiSendAddress),
-                                                    calldata: multiSendData,
-                                                    fallbackHandler: EthereumAddress(self.safeConfig.ERC4337ModuleAddress),
-                                                    paymentToken: EthereumAddress.zero,
-                                                    payment: BigUInt(0),
-                                                    paymentReceiver: EthereumAddress.zero
-                                                                    ).transaction().data else {
-            throw SmartAccountError.errorGettingInitCode
-        }
-        
-        guard let createProxyWithNonceData = try CreateProxyWithNonceFunction(contract: EthereumAddress(self.safeConfig.proxyFactory), _singleton: EthereumAddress(self.safeConfig.safeSingletonL2), initializer: setupCallData, saltNonce: nonce).transaction().data else {
-            throw SmartAccountError.errorGettingInitCode
-        }
-        
-        return createProxyWithNonceData
-    }
     
     public func getFactoryData() async throws -> Data {
         let setupCallData = try SafeAccount.setupCallData(signer: self.signer, safeConfig: self.safeConfig)
@@ -158,7 +116,44 @@ public struct SafeAccount: SmartAccountProtocol  {
     }
     
     
-    public static func setupCallData(signer: EthereumAccountProtocol, safeConfig: SafeConfig) throws  -> Data {
+    public static func passkeySignerSetupCallData(signer: EthereumAccountProtocol, safeConfig: SafeConfig) throws  -> Data {
+        
+        guard let enableModulesCallData = try EnableModulesFunction(contract: EthereumAddress(safeConfig.safeModuleSetupAddress),
+                                                                    modules: [EthereumAddress(safeConfig.ERC4337ModuleAddress)]).transaction().data else {
+            throw SmartAccountError.errorGettingInitCode
+        }
+        
+        guard let passkeySigner  = signer as? PasskeySigner  else {
+            throw SmartAccountError.errorGettingInitCode
+        }
+        
+        let verifiers = EthereumAddress(safeConfig.safeWebAuthnSharedSignerAddress).asNumber()!
+        
+        guard let configureData = try ConfigureFunction(contract: EthereumAddress(safeConfig.safeWebAuthnSharedSignerAddress), x: passkeySigner.passkey.publicX, y: passkeySigner.passkey.publicY, verifiers: verifiers).transaction().data else {
+            throw SmartAccountError.errorGettingInitCode
+        }
+        
+        let multiSendData = try [MultiSendTransaction(to:  EthereumAddress(safeConfig.safeModuleSetupAddress), data: enableModulesCallData),MultiSendTransaction(to:  EthereumAddress(safeConfig.safeWebAuthnSharedSignerAddress), data: configureData),
+       ].pack()
+        
+        guard let setupCallData = try SetupFunction(contract: EthereumAddress(safeConfig.safeSingletonL2),
+                                                    _owners: [signer.address],
+                                                    _threshold: BigUInt(1),
+                                                    to: EthereumAddress(safeConfig.safeMultiSendAddress),
+                                                    calldata: multiSendData,
+                                                    fallbackHandler: EthereumAddress(safeConfig.ERC4337ModuleAddress),
+                                                    paymentToken: EthereumAddress.zero,
+                                                    payment: BigUInt(0),
+                                                    paymentReceiver: EthereumAddress.zero
+                                                                    ).transaction().data else {
+            throw SmartAccountError.errorGettingInitCode
+        }
+        return setupCallData
+    }
+    
+    
+    
+    public static func eoaSignerSetupCallData(signer: EthereumAccountProtocol, safeConfig: SafeConfig) throws  -> Data {
         
         guard let enableModulesCallData = try EnableModulesFunction(contract: EthereumAddress(safeConfig.safeModuleSetupAddress),
                                                                     modules: [EthereumAddress(safeConfig.ERC4337ModuleAddress)]).transaction().data else {
@@ -180,6 +175,11 @@ public struct SafeAccount: SmartAccountProtocol  {
         }
         
         return setupCallData
+    }
+    
+    
+    public static func setupCallData(signer: EthereumAccountProtocol, safeConfig: SafeConfig) throws  -> Data {
+       return try eoaSignerSetupCallData(signer: signer, safeConfig: safeConfig)
     }
     
     public static func predictAddress(signer: EthereumAccountProtocol, rpc: EthereumRPCProtocol, safeConfig: SafeConfig) async throws -> EthereumAddress {
