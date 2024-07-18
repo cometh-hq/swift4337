@@ -11,7 +11,7 @@ import BigInt
 
 
 public struct SignerUtils {
-    public static func passkeySignerSetupCallData(signer: EthereumAccountProtocol, safeConfig: SafeConfig) throws  -> Data {
+     static func passkeySignerSetupCallData(signer: EthereumAccountProtocol, safeConfig: SafeConfig) throws  -> Data {
         
         guard let enableModulesCallData = try EnableModulesFunction(contract: EthereumAddress(safeConfig.safeModuleSetupAddress),
                                                                     modules: [EthereumAddress(safeConfig.ERC4337ModuleAddress)]).transaction().data else {
@@ -26,7 +26,7 @@ public struct SignerUtils {
         let verifiers = EthereumAddress(safeConfig.safeP256VerifierAddress).asNumber()!
         
         
-        guard var configureData = try ConfigureFunction(contract: EthereumAddress(safeConfig.safeWebAuthnSharedSignerAddress), x: passkeySigner.passkey.publicX, y: passkeySigner.passkey.publicY, verifiers: verifiers).transaction().data else {
+        guard var configureData = try ConfigureFunction(contract: EthereumAddress(safeConfig.safeWebAuthnSharedSignerAddress), x: passkeySigner.publicX, y: passkeySigner.publicY, verifiers: verifiers).transaction().data else {
             throw SmartAccountError.errorGettingInitCode
         }
         
@@ -59,7 +59,7 @@ public struct SignerUtils {
     
     
     
-    public static func eoaSignerSetupCallData(signer: EthereumAccountProtocol, safeConfig: SafeConfig) throws  -> Data {
+    static func eoaSignerSetupCallData(signer: EthereumAccountProtocol, safeConfig: SafeConfig) throws  -> Data {
         
         guard let enableModulesCallData = try EnableModulesFunction(contract: EthereumAddress(safeConfig.safeModuleSetupAddress),
                                                                     modules: [EthereumAddress(safeConfig.ERC4337ModuleAddress)]).transaction().data else {
