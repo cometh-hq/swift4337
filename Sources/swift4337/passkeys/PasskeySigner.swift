@@ -20,9 +20,9 @@ public class PasskeySigner: EthereumAccountProtocol {
    
     public let address: EthereumAddress
 
-    init(passkey: Passkey, addresss: EthereumAddress) {
+    init(passkey: Passkey, address: EthereumAddress) {
         self.passkey = passkey
-        self.address = addresss
+        self.address = address
     }
     
     public func sign(data: Data) throws -> Data {

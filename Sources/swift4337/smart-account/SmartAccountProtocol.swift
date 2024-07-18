@@ -15,6 +15,7 @@ public enum SmartAccountError: Error, Equatable {
     case errorPredictingAddress
     case errorGettingInitCode
     case errorAccountNotDeployed
+    case errorUnsupportedSigner
 }
 
 public struct EIP712Domain {
