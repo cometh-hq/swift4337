@@ -11,7 +11,7 @@ import BigInt
 
 
 public struct SignerUtils {
-     static func passkeySignerSetupCallData(signer: EthereumAccountProtocol, safeConfig: SafeConfig) throws  -> Data {
+     static func passkeySignerSetupCallData(signer: SignerProtocol, safeConfig: SafeConfig) throws  -> Data {
         
         guard let enableModulesCallData = try EnableModulesFunction(contract: EthereumAddress(safeConfig.safeModuleSetupAddress),
                                                                     modules: [EthereumAddress(safeConfig.ERC4337ModuleAddress)]).transaction().data else {
@@ -59,7 +59,7 @@ public struct SignerUtils {
     
     
     
-    static func eoaSignerSetupCallData(signer: EthereumAccountProtocol, safeConfig: SafeConfig) throws  -> Data {
+    static func eoaSignerSetupCallData(signer: SignerProtocol, safeConfig: SafeConfig) throws  -> Data {
         
         guard let enableModulesCallData = try EnableModulesFunction(contract: EthereumAddress(safeConfig.safeModuleSetupAddress),
                                                                     modules: [EthereumAddress(safeConfig.ERC4337ModuleAddress)]).transaction().data else {
@@ -85,11 +85,11 @@ public struct SignerUtils {
     
     
     
-    public static func setupCallData(signer: EthereumAccountProtocol, safeConfig: SafeConfig) throws  -> Data {
+    public static func setupCallData(signer: SignerProtocol, safeConfig: SafeConfig) throws  -> Data {
         switch signer{
         case is PasskeySigner:
             return try passkeySignerSetupCallData(signer: signer, safeConfig: safeConfig)
-        case is EthereumAccount:
+        case is EOASigner:
             return try eoaSignerSetupCallData(signer: signer, safeConfig: safeConfig)
         default:
             throw SmartAccountError.errorUnsupportedSigner

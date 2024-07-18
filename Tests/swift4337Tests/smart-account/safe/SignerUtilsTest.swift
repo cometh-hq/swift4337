@@ -15,7 +15,7 @@ import BigInt
 class SignerUtilsTest: XCTestCase {
 
     let signerPasskey = PasskeySigner(publicX: BigUInt("24496937152968818026222377611516525898032551233447781531236978925153890247522"), publicY: BigUInt("4502259600096091720265343022608124325285676227578744180405546100919876529868"), domain: "string")
-    let signerEOA = try! EthereumAccount.init(keyStorage: TestEthereumKeyStorage(privateKey: "0x4646464646464646464646464646464646464646464646464646464646464646"))
+    let signerEOA = try! EthereumAccount.init(keyStorage: TestEthereumKeyStorage(privateKey: "0x4646464646464646464646464646464646464646464646464646464646464646")).toSigner()
   
     
     func testPasskeySignerSetupCallDataIsOk() async throws {

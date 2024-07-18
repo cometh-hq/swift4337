@@ -17,14 +17,18 @@ public enum PasskeySignerError: Error, Equatable {
     case errorNotImplemented
 }
 
-public class PasskeySigner:NSObject, EthereumAccountProtocol, ASAuthorizationControllerDelegate {
+public class PasskeySigner:NSObject, SignerProtocol, ASAuthorizationControllerDelegate {
+ 
+    
     let defaults = UserDefaults.standard
     
     var publicX: BigUInt = BigUInt(0)
     var publicY: BigUInt = BigUInt(0)
     
     let domain: String
-   
+    
+    private var signatureContinuation: CheckedContinuation<String, Error>?
+       
     init(publicX: BigUInt, publicY: BigUInt, domain: String) {
        
         self.publicX = publicX
@@ -36,6 +40,8 @@ public class PasskeySigner:NSObject, EthereumAccountProtocol, ASAuthorizationCon
     public init(domain: String, name: String) {
         self.domain = domain
         super.init()
+        
+        //TODO: use continuation
         if let x = defaults.string(forKey: "publicX"), let y = defaults.string(forKey: "publicY") {
             //TODO: no force unwrap
             self.publicX = BigUInt(hex:x)!
@@ -46,39 +52,14 @@ public class PasskeySigner:NSObject, EthereumAccountProtocol, ASAuthorizationCon
     }
 
     public let address: EthereumAddress =  EthereumAddress(SafeConfig.entryPointV7().safeWebAuthnSharedSignerAddress)
-
     
-    public func sign(data: Data) throws -> Data {
-        throw PasskeySignerError.errorNotImplemented
-    }
-
-    public func sign(hex: String) throws -> Data {
-        throw PasskeySignerError.errorNotImplemented
-    }
-
-    public func sign(hash: String) throws -> Data {
-        throw PasskeySignerError.errorNotImplemented
-    }
-
-    public func sign(message: Data) throws -> Data {
-        throw PasskeySignerError.errorNotImplemented
-    }
-
-    public func sign(message: String) throws -> Data {
-        throw PasskeySignerError.errorNotImplemented
-    }
-
-    public func signMessage(message: Data) throws -> String {
-        throw PasskeySignerError.errorNotImplemented
-    }
-    
-    public func signMessage(message: web3.TypedData) throws -> String {
-      
-       let hash = try message.signableHash()
-        self.signIn(domain: self.domain, challenge: hash)
-
-      
-       return ""
+    public func signMessage(message: web3.TypedData) async throws -> String {
+        let hash = try message.signableHash()
+        
+        return try await withCheckedThrowingContinuation { continuation in
+            signatureContinuation = continuation
+                    self.signIn(domain: self.domain, challenge: hash)
+                }
    }
     
     
@@ -146,31 +127,23 @@ public class PasskeySigner:NSObject, EthereumAccountProtocol, ASAuthorizationCon
             Logger.defaultLogger.debug("verify")
             Logger.defaultLogger.debug("A passkey was used to sign in: \(credential)")
            
+           
+                   
+                 //  imageContinuation?.resume(returning: image)
+            
+            
             guard let signature = credential.signature else {
                 print("Missing signature")
+                signatureContinuation?.resume(throwing: EthereumAccountError.signError)
                 return
             }
             Logger.defaultLogger.debug("signature \(signature.web3.hexString)")
-            
-            guard let authenticatorData = credential.rawAuthenticatorData else {
-                print("Missing authenticatorData")
-                return
-            }
-            
-            Logger.defaultLogger.debug("authenticatorData \(authenticatorData.web3.hexString)")
-            
-            guard let userID = credential.userID else {
-                print("Missing userID")
-                return
-            }
-            Logger.defaultLogger.debug("userID \(userID.web3.hexString)")
-            
-            let clientDataJSON = credential.rawClientDataJSON
-            let credentialId = credential.credentialID
-            
+            signatureContinuation?.resume(returning: signature.web3.hexString)
+
             
          } else {
            // Handle other authentication cases, such as Sign in with Apple.
+             signatureContinuation?.resume(throwing: EthereumAccountError.signError)
              Logger.defaultLogger.debug("other")
        }
     }

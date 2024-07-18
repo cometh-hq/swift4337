@@ -17,7 +17,7 @@ class SafeAccountTests: XCTestCase {
     var safeAccount: SafeAccount!
     let rpc = TestRPCClient(network: EthereumNetwork.sepolia)
     let bundler = TestBundlerClient()
-    let account = try! EthereumAccount.init(keyStorage: TestEthereumKeyStorage(privateKey: "0x4646464646464646464646464646464646464646464646464646464646464646"))
+    let account = try! EthereumAccount.init(keyStorage: TestEthereumKeyStorage(privateKey: "0x4646464646464646464646464646464646464646464646464646464646464646")).toSigner()
   
     override func setUp(){
         super.setUp()
@@ -49,7 +49,7 @@ class SafeAccountTests: XCTestCase {
                                    
         
         let expected = "0x000000000000000000000000298adde4bafae7cf44a9bf2a1881a836716592c85ac5f6445e673647d6cc907e3af6d065c591f07173e83246ef649147b0034bf119da693c4025be55206e9db91c"
-        let signature = try  self.safeAccount.signUserOperation(userOp)
+        let signature = try await self.safeAccount.signUserOperation(userOp)
         
         XCTAssertEqual(signature.web3.hexString, expected)
     }

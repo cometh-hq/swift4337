@@ -15,7 +15,7 @@ class SmartAccountProtocolTests: XCTestCase {
     let rpc = TestRPCClient(network: EthereumNetwork.sepolia)
     let bundler = TestBundlerClient()
     let paymaster = TestPaymasterClient()
-    let account = try! EthereumAccount.init(keyStorage: TestEthereumKeyStorage(privateKey: "0x4646464646464646464646464646464646464646464646464646464646464646"))
+    let account = try! EthereumAccount.init(keyStorage: TestEthereumKeyStorage(privateKey: "0x4646464646464646464646464646464646464646464646464646464646464646")).toSigner()
     
     override func setUp(){
         super.setUp()

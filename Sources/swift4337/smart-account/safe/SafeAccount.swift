@@ -13,7 +13,7 @@ import os
 public struct SafeAccount: SmartAccountProtocol  {
     public let address: EthereumAddress
     public let safeConfig: SafeConfig
-    public let signer: EthereumAccountProtocol
+    public let signer: SignerProtocol
     public let chainId: Int
     
     public let bundler: BundlerClientProtocol
@@ -24,7 +24,7 @@ public struct SafeAccount: SmartAccountProtocol  {
     
     public let gasEstimator: GasEstimatorProtocol
     
-    public init(address: EthereumAddress? = nil, signer: EthereumAccountProtocol, rpc: EthereumRPCProtocol, bundler: BundlerClientProtocol, paymaster: PaymasterClientProtocol? = nil, safeConfig: SafeConfig = SafeConfig.entryPointV7(), gasEstimator: GasEstimatorProtocol? = nil) async throws {
+    public init(address: EthereumAddress? = nil, signer: SignerProtocol, rpc: EthereumRPCProtocol, bundler: BundlerClientProtocol, paymaster: PaymasterClientProtocol? = nil, safeConfig: SafeConfig = SafeConfig.entryPointV7(), gasEstimator: GasEstimatorProtocol? = nil) async throws {
         if let address {
             self.address = address
         } else {
@@ -63,7 +63,7 @@ public struct SafeAccount: SmartAccountProtocol  {
         return callData
     }
     
-    public func signUserOperation(_ userOperation: UserOperation) throws -> Data {
+    public func signUserOperation(_ userOperation: UserOperation) async throws -> Data {
         let validAfter = BigUInt(0)
         let validUntil = BigUInt(0)
         
@@ -79,7 +79,7 @@ public struct SafeAccount: SmartAccountProtocol  {
         
         let decoder = JSONDecoder()
         let typedData = try decoder.decode(TypedData.self, from: data)
-        let signed = try self.signer.signMessage(message: typedData)
+        let signed = try await self.signer.signMessage(message: typedData)
         
         let validUntilEncoded =  try ABIEncoder.encode(validUntil, uintSize: 48)
         let validAfterEncoded =  try ABIEncoder.encode(validAfter, uintSize: 48)
@@ -117,7 +117,7 @@ public struct SafeAccount: SmartAccountProtocol  {
     
 
     
-    public static func predictAddress(signer: EthereumAccountProtocol, rpc: EthereumRPCProtocol, safeConfig: SafeConfig) async throws -> EthereumAddress {
+    public static func predictAddress(signer: SignerProtocol, rpc: EthereumRPCProtocol, safeConfig: SafeConfig) async throws -> EthereumAddress {
         let nonce = safeConfig.creationNonce
         
         let safeProxyFactory = SafeProxyFactory(client: rpc , address: safeConfig.proxyFactory)
