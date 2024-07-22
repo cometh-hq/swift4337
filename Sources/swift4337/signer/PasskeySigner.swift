@@ -17,6 +17,7 @@ public enum PasskeySignerError: Error, Equatable {
     case errorNotImplemented
 }
 
+
 public class PasskeySigner:NSObject, SignerProtocol, ASAuthorizationControllerDelegate {
  
     
@@ -27,7 +28,7 @@ public class PasskeySigner:NSObject, SignerProtocol, ASAuthorizationControllerDe
     
     let domain: String
     
-    private var signatureContinuation: CheckedContinuation<String, Error>?
+    private var credentialContinuation: CheckedContinuation<ASAuthorizationPlatformPublicKeyCredentialAssertion, Error>?
        
     init(publicX: BigUInt, publicY: BigUInt, domain: String) {
        
@@ -53,13 +54,33 @@ public class PasskeySigner:NSObject, SignerProtocol, ASAuthorizationControllerDe
 
     public let address: EthereumAddress =  EthereumAddress(SafeConfig.entryPointV7().safeWebAuthnSharedSignerAddress)
     
+    
     public func signMessage(message: web3.TypedData) async throws -> String {
         let hash = try message.signableHash()
         
-        return try await withCheckedThrowingContinuation { continuation in
-            signatureContinuation = continuation
+        let credential =  try await withCheckedThrowingContinuation { continuation in
+            credentialContinuation = continuation
                     self.signIn(domain: self.domain, challenge: hash)
                 }
+        
+                
+         guard let signature = credential.signature else {
+             Logger.defaultLogger.error("Missing signature")
+             throw  EthereumAccountError.signError
+             
+         }
+         
+         guard let authenticatorData = credential.rawAuthenticatorData else {
+             Logger.defaultLogger.error("Missing authenticatorData")
+             throw  EthereumAccountError.signError
+              
+         }
+       
+        let webAuthnCredential = WebauthnCredentialData(clientDataJSON: credential.rawClientDataJSON, signature: signature, authenticatorData: authenticatorData)
+        let encodedWebAuthnSignature = try webAuthnCredential.encodeWebAuthnSignature()
+        
+        let safeSignature  =  SafeSignature(signer: self.address.asString(), data: encodedWebAuthnSignature.web3.hexString, dynamic: true)
+        return SignerUtils.buildSignatureBytes(signatures: [safeSignature])
    }
     
     
@@ -126,24 +147,12 @@ public class PasskeySigner:NSObject, SignerProtocol, ASAuthorizationControllerDe
            // Take steps to verify the challenge.
             Logger.defaultLogger.debug("verify")
             Logger.defaultLogger.debug("A passkey was used to sign in: \(credential)")
-           
-           
-                   
-                 //  imageContinuation?.resume(returning: image)
-            
-            
-            guard let signature = credential.signature else {
-                print("Missing signature")
-                signatureContinuation?.resume(throwing: EthereumAccountError.signError)
-                return
-            }
-            Logger.defaultLogger.debug("signature \(signature.web3.hexString)")
-            signatureContinuation?.resume(returning: signature.web3.hexString)
+            credentialContinuation?.resume(returning: credential)
 
             
          } else {
            // Handle other authentication cases, such as Sign in with Apple.
-             signatureContinuation?.resume(throwing: EthereumAccountError.signError)
+             credentialContinuation?.resume(throwing: EthereumAccountError.signError)
              Logger.defaultLogger.debug("other")
        }
     }
@@ -179,6 +188,7 @@ public class PasskeySigner:NSObject, SignerProtocol, ASAuthorizationControllerDe
     }
 
      public func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: any Error) {
+         credentialContinuation?.resume(throwing: EthereumAccountError.signError)
          Logger.defaultLogger.debug("la \(error)")
      }
 }

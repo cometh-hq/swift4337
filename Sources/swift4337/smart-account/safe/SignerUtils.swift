@@ -9,8 +9,62 @@ import Foundation
 import web3
 import BigInt
 
+struct SafeSignature {
+    var signer: String
+    var data: String
+    var dynamic: Bool
+}
+
+extension String {
+    func padLeft(toLength: Int, withPad: String = " ") -> String {
+        let newLength = self.count
+        if newLength < toLength {
+            return String(repeating: withPad, count: toLength - newLength) + self
+        } else {
+            return self
+        }
+    }
+}
 
 public struct SignerUtils {
+    
+    static func buildSignatureBytes(signatures: [SafeSignature]) -> String {
+        let SIGNATURE_LENGTH_BYTES = 65
+
+        let sortedSignatures = signatures.sorted {
+            $0.signer.lowercased() < $1.signer.lowercased()
+        }
+
+        var signatureBytes = "0x"
+        var dynamicBytes = ""
+
+        for sig in sortedSignatures {
+            if sig.dynamic {
+                /*
+                    A contract signature has a static part of 65 bytes and the dynamic part that needs to be appended
+                    at the end of signature bytes.
+                    The signature format is
+                    Signature type == 0
+                    Constant part: 65 bytes
+                    {32-bytes signature verifier}{32-bytes dynamic data position}{1-byte signature type}
+                    Dynamic part (solidity bytes): 32 bytes + signature data length
+                    {32-bytes signature length}{bytes signature data}
+                */
+                let dynamicPartPosition = String((sortedSignatures.count * SIGNATURE_LENGTH_BYTES + dynamicBytes.count / 2), radix: 16).padLeft(toLength: 64, withPad: "0")
+                let dynamicPartLength = String(sig.data.dropFirst(2).count / 2, radix: 16).padLeft(toLength: 64, withPad: "0")
+                let staticSignature = "\(String(sig.signer.dropFirst(2)).padLeft(toLength: 64, withPad: "0"))\(dynamicPartPosition)00"
+                let dynamicPartWithLength = "\(dynamicPartLength)\(sig.data.dropFirst(2))"
+
+                signatureBytes += staticSignature
+                dynamicBytes += dynamicPartWithLength
+            } else {
+                signatureBytes += sig.data.dropFirst(2)
+            }
+        }
+
+        return signatureBytes + dynamicBytes
+    }
+    
      static func passkeySignerSetupCallData(signer: SignerProtocol, safeConfig: SafeConfig) throws  -> Data {
         
         guard let enableModulesCallData = try EnableModulesFunction(contract: EthereumAddress(safeConfig.safeModuleSetupAddress),
