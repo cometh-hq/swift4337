@@ -73,7 +73,7 @@ public struct SignerUtils {
         }
         
         
-        guard let passkeySigner  = signer as? PasskeySigner  else {
+        guard let passkeySigner  = signer as? SafePasskeySigner  else {
             throw SmartAccountError.errorGettingInitCode
         }
         
@@ -141,7 +141,7 @@ public struct SignerUtils {
     
     public static func setupCallData(signer: SignerProtocol, safeConfig: SafeConfig) throws  -> Data {
         switch signer{
-        case is PasskeySigner:
+        case is SafePasskeySigner:
             return try passkeySignerSetupCallData(signer: signer, safeConfig: safeConfig)
         case is EOASigner:
             return try eoaSignerSetupCallData(signer: signer, safeConfig: safeConfig)
