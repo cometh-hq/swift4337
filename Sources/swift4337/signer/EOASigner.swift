@@ -8,7 +8,7 @@
 import Foundation
 import web3
 
-extension EthereumAccount {
+public extension EthereumAccount {
     func toSigner()-> EOASigner {
         return EOASigner(ethereumAccount: self)
     }

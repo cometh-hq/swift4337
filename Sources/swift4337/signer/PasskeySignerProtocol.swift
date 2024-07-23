@@ -54,8 +54,35 @@ protocol PasskeySignerProtocol: SignerProtocol  {
 }
 
 extension PasskeySignerProtocol {
-
     
+    public func publicXKey() -> String{
+        return "publicX"
+    }
+    
+    public func publicYKey() -> String{
+        return "publicY"
+    }
+    
+    public func setXYUserPref(x: String, y: String) {
+        UserDefaults.standard.set(x, forKey: self.publicXKey())
+        UserDefaults.standard.set(y, forKey: self.publicYKey())
+    }
+    
+    public func getXYFromUserPref() -> (x: BigUInt?, y: BigUInt?){
+        var x: BigUInt?
+        var y: BigUInt?
+        
+        if let xHex = UserDefaults.standard.string(forKey: self.publicXKey()) {
+            x = BigUInt(hex: xHex)
+        }
+        
+        if let yHex = UserDefaults.standard.string(forKey: self.publicYKey()) {
+            y = BigUInt(hex: yHex)
+        }
+        
+        return (x,y)
+    }
+
     public func signUp(domain: String, name: String, userID: Data) {
          let platformProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: domain)
          let platformKeyRequest = platformProvider.createCredentialRegistrationRequest(challenge: "0x33".web3.hexData!, name: name, userID: userID)
@@ -70,15 +97,11 @@ extension PasskeySignerProtocol {
          let authController = ASAuthorizationController(authorizationRequests: [ assertionRequest ] )
          authController.delegate = self.authorizationDelegate
        
-      
-       // If credentials are available, presents a modal sign-in sheet.
-       // If there are no locally saved credentials, the system presents a QR code to allow signing in with a
-       // passkey from a nearby device.
-         //if #available(iOS 16.0, *) {
-          //   authController.performRequests(options: .preferImmediatelyAvailableCredentials)
-         //} else {
-         authController.performRequests()
-         //}
+         if #available(iOS 16.0, *) {
+             authController.performRequests(options: .preferImmediatelyAvailableCredentials)
+         } else {
+             authController.performRequests()
+         }
      }
 
     
@@ -127,25 +150,37 @@ extension PasskeySignerProtocol {
 
         guard let authData = decodedAttestationObject["authData"],
             case let .byteString(authDataBytes) = authData else {
-            Logger.defaultLogger.debug("invalidAuthData")
+            Logger.defaultLogger.error("invalidAuthData")
             throw  EthereumAccountError.createAccountError
         }
 
-        let authenticatorData = try? AuthenticatorData(bytes: Data(authDataBytes))
+        let authenticatorData = try AuthenticatorData(bytes: Data(authDataBytes))
         
-        guard let decodedPublicKey = try! CBOR.decode(authenticatorData!.attestedData!.publicKey) else {
-            Logger.defaultLogger.debug("decodedPublicKey error")
+        guard let decodedPublicKey = try CBOR.decode(authenticatorData.attestedData!.publicKey) else {
+            Logger.defaultLogger.error("decodedPublicKey error")
             throw  EthereumAccountError.createAccountError
         }
         
-        let x = decodedPublicKey[-2]
-        let y = decodedPublicKey[-3]
+        guard let x = decodedPublicKey[-2]?.toUInt8Array().hexString else {
+            Logger.defaultLogger.error("no x error")
+            throw  EthereumAccountError.createAccountError
+        }
+        guard let y = decodedPublicKey[-3]?.toUInt8Array().hexString else {
+            Logger.defaultLogger.error("no x error")
+            throw  EthereumAccountError.createAccountError
+        }
+    
+        guard let xBigUInt =  BigUInt(hex: x) else {
+            Logger.defaultLogger.error("invalid x error")
+            throw  EthereumAccountError.createAccountError
+        }
         
-        //TODO: Clean
-        UserDefaults.standard.set(x!.toUInt8Array().hexString, forKey: "publicX")
-        UserDefaults.standard.set(y!.toUInt8Array().hexString, forKey: "publicY")
-        
-        self.setPublicXY(x:  BigUInt(hex: x!.toUInt8Array().hexString)!, y: BigUInt(hex: y!.toUInt8Array().hexString)!)
+        guard let yBigUInt =  BigUInt(hex: y) else {
+            Logger.defaultLogger.error("invalid y error")
+            throw  EthereumAccountError.createAccountError
+        }
+        self.setPublicXY(x: xBigUInt, y: yBigUInt)
+        self.setXYUserPref(x:x, y:y)
     }
     
 }

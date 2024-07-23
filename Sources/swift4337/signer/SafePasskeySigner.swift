@@ -24,26 +24,29 @@ public class SafePasskeySigner:NSObject, PasskeySignerProtocol {
     
     let domain: String
     
-    public let address: EthereumAddress =  EthereumAddress(SafeConfig.entryPointV7().safeWebAuthnSharedSignerAddress)
+    public let address: EthereumAddress;
    
     public var authorizationDelegate: AuthorizationDelegate = AuthorizationDelegate()
     
-    init(publicX: BigUInt, publicY: BigUInt, domain: String) {
+    init(publicX: BigUInt, publicY: BigUInt, domain: String, address: EthereumAddress = EthereumAddress(SafeConfig.entryPointV7().safeWebAuthnSharedSignerAddress)) {
         self.publicX = publicX
         self.publicY = publicY
         self.domain = domain
+        self.address = address
         super.init()
     }
     
-    public init(domain: String, name: String) async throws{
+    public init(domain: String, name: String, address: EthereumAddress = EthereumAddress(SafeConfig.entryPointV7().safeWebAuthnSharedSignerAddress)) async throws{
         self.domain = domain
-        super.init()
+        self.address = address
         
-        //TODO: use continuation
-        if let x = UserDefaults.standard.string(forKey: "publicX"), let y = UserDefaults.standard.string(forKey: "publicY") {
-            //TODO: no force unwrap
-            self.publicX = BigUInt(hex:x)!
-            self.publicY = BigUInt(hex:y)!
+        super.init()
+    
+        let (xFromPref, yFromPref) = self.getXYFromUserPref()
+        
+        if let x = xFromPref, let y = yFromPref {
+            self.publicX = x
+            self.publicY = y
         } else {
             try await self.createPasskey(domain: domain, name: name)
         }
