@@ -17,19 +17,19 @@ public enum PasskeySignerError: Error, Equatable {
     case errorNotImplemented
 }
 
-
 public class PasskeySigner:NSObject, SignerProtocol, ASAuthorizationControllerDelegate {
  
-    
-    let defaults = UserDefaults.standard
-    
     var publicX: BigUInt = BigUInt(0)
     var publicY: BigUInt = BigUInt(0)
     
     let domain: String
+    let defaults = UserDefaults.standard
     
-    private var credentialContinuation: CheckedContinuation<ASAuthorizationPlatformPublicKeyCredentialAssertion, Error>?
-       
+    public let address: EthereumAddress =  EthereumAddress(SafeConfig.entryPointV7().safeWebAuthnSharedSignerAddress)
+   
+    private var signInContinuation: CheckedContinuation<ASAuthorizationPlatformPublicKeyCredentialAssertion, Error>?
+    private var signUpContinuation: CheckedContinuation<ASAuthorizationPlatformPublicKeyCredentialRegistration, Error>?
+  
     init(publicX: BigUInt, publicY: BigUInt, domain: String) {
        
         self.publicX = publicX
@@ -38,7 +38,7 @@ public class PasskeySigner:NSObject, SignerProtocol, ASAuthorizationControllerDe
         super.init()
     }
     
-    public init(domain: String, name: String) {
+    public init(domain: String, name: String) async throws{
         self.domain = domain
         super.init()
         
@@ -48,32 +48,96 @@ public class PasskeySigner:NSObject, SignerProtocol, ASAuthorizationControllerDe
             self.publicX = BigUInt(hex:x)!
             self.publicY = BigUInt(hex:y)!
         } else {
-            self.signUp(domain: domain, name: name, userID: Data(name.utf8))
+            try await self.createPasskey(domain: domain, name: name)
         }
     }
-
-    public let address: EthereumAddress =  EthereumAddress(SafeConfig.entryPointV7().safeWebAuthnSharedSignerAddress)
     
+    
+    public func createPasskey(domain: String, name: String) async throws {
+        
+        let credential =  try await withCheckedThrowingContinuation { continuation in
+            signUpContinuation = continuation
+                    self.signUp(domain: domain, name: name, userID: Data(name.utf8))
+                }
+        
+        guard let attestationObject = credential.rawAttestationObject else {
+            Logger.defaultLogger.error("invalidAttestationObject")
+            throw  EthereumAccountError.createAccountError
+        }
+  
+        let attestationObjectData = attestationObject
+        guard let decodedAttestationObject = try? CBOR.decode([UInt8](attestationObjectData)) else {
+            Logger.defaultLogger.error("invalidAttestationObject")
+            throw  EthereumAccountError.createAccountError
+        }
+
+        guard let authData = decodedAttestationObject["authData"],
+            case let .byteString(authDataBytes) = authData else {
+            Logger.defaultLogger.debug("invalidAuthData")
+            throw  EthereumAccountError.createAccountError
+        }
+
+        let authenticatorData = try? AuthenticatorData(bytes: Data(authDataBytes))
+        
+        guard let decodedPublicKey = try! CBOR.decode(authenticatorData!.attestedData!.publicKey) else {
+            Logger.defaultLogger.debug("decodedPublicKey error")
+            throw  EthereumAccountError.createAccountError
+        }
+        
+        let x = decodedPublicKey[-2]
+        let y = decodedPublicKey[-3]
+        
+        //TODO: Clean
+        defaults.set(x!.toUInt8Array().hexString, forKey: "publicX")
+        defaults.set(y!.toUInt8Array().hexString, forKey: "publicY")
+        self.publicX = BigUInt(hex: x!.toUInt8Array().hexString)!
+        self.publicY = BigUInt(hex: y!.toUInt8Array().hexString)!
+        
+    }
+    
+    public func signUp(domain: String, name: String, userID: Data) {
+         let platformProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: domain)
+         let platformKeyRequest = platformProvider.createCredentialRegistrationRequest(challenge: "0x33".web3.hexData!, name: name, userID: userID)
+         let authController = ASAuthorizationController(authorizationRequests: [platformKeyRequest])
+         authController.delegate = self
+         authController.performRequests()
+     }
+     
+     func signIn(domain: String, challenge: Data) {
+       let publicKeyCredentialProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: domain)
+       let assertionRequest = publicKeyCredentialProvider.createCredentialAssertionRequest(challenge: challenge)
+       let authController = ASAuthorizationController(authorizationRequests: [ assertionRequest ] )
+       authController.delegate = self
+       
+      
+       // If credentials are available, presents a modal sign-in sheet.
+       // If there are no locally saved credentials, the system presents a QR code to allow signing in with a
+       // passkey from a nearby device.
+         //if #available(iOS 16.0, *) {
+          //   authController.performRequests(options: .preferImmediatelyAvailableCredentials)
+         //} else {
+         authController.performRequests()
+         //}
+     }
+
     
     public func signMessage(message: web3.TypedData) async throws -> String {
         let hash = try message.signableHash()
         
         let credential =  try await withCheckedThrowingContinuation { continuation in
-            credentialContinuation = continuation
+            signInContinuation = continuation
                     self.signIn(domain: self.domain, challenge: hash)
                 }
         
-                
          guard let signature = credential.signature else {
              Logger.defaultLogger.error("Missing signature")
              throw  EthereumAccountError.signError
              
          }
-         
+        
          guard let authenticatorData = credential.rawAuthenticatorData else {
              Logger.defaultLogger.error("Missing authenticatorData")
              throw  EthereumAccountError.signError
-              
          }
        
         let webAuthnCredential = WebauthnCredentialData(clientDataJSON: credential.rawClientDataJSON, signature: signature, authenticatorData: authenticatorData)
@@ -83,13 +147,10 @@ public class PasskeySigner:NSObject, SignerProtocol, ASAuthorizationControllerDe
         return SignerUtils.buildSignatureBytes(signatures: [safeSignature])
    }
     
-    
-    
     public func dummySignature() throws ->  String {
         let dummyAuthenticatorData = "0xfefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefe04fefefefe".web3.hexData!
         let dummyClientData_fields = "\"origin\":\"http://safe.global\",\"padding\":\"This pads the clientDataJSON so that we can leave room for additional implementation specific fields for a more accurate 'preVerificationGas' estimate.\""
         
- 
         let dummyR = BigUInt(hex: "0xecececececececececececececececececececececececececececececececec")!;
         let dummyS = BigUInt(hex: "0xd5ad5ad5ad5ad5ad5ad5ad5ad5ad5ad5ad5ad5ad5ad5ad5ad5ad5ad5ad5ad5af")!;
         
@@ -99,7 +160,6 @@ public class PasskeySigner:NSObject, SignerProtocol, ASAuthorizationControllerDe
                                                                           s: dummyS)
                             
         let safeSignature = SafeSignature(signer: self.address.asString(), data: signatureBytes.web3.hexString, dynamic: true)
-        
         let signature = SignerUtils.buildSignatureBytes(signatures: [safeSignature])
         
         let validUntilEncoded =  try ABIEncoder.encode(BigUInt(0), uintSize: 48)
@@ -110,110 +170,28 @@ public class PasskeySigner:NSObject, SignerProtocol, ASAuthorizationControllerDe
     }
     
     ///
-    ///
-    ///
+    /// ASAuthorizationControllerDelegate
     ///
     public func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
-        Logger.defaultLogger.debug("ICI")
-        if let credential = authorization.credential as? ASAuthorizationPlatformPublicKeyCredentialRegistration {
-            Logger.defaultLogger.debug("A new passkey was registered: \(credential)")
-          
-            guard let attestationObject = credential.rawAttestationObject else { return }
-      
-            let clientDataJSON = credential.rawClientDataJSON
-            let credentialID = credential.credentialID
-            Logger.defaultLogger.debug("credentialID: \(credentialID.web3.hexString)")
+        
+        switch authorization.credential {
+        case let credential as ASAuthorizationPlatformPublicKeyCredentialRegistration:
+            signUpContinuation?.resume(returning: credential)
+            return
+            
+        case let credential as ASAuthorizationPlatformPublicKeyCredentialAssertion:
+             signInContinuation?.resume(returning: credential)
+            return
              
-            let attestationObjectData = attestationObject
-            guard let decodedAttestationObject = try? CBOR.decode([UInt8](attestationObjectData)) else {
-                Logger.defaultLogger.debug("invalidAttestationObject")
-                return
-            }
-
-            guard let authData = decodedAttestationObject["authData"],
-                case let .byteString(authDataBytes) = authData else {
-                Logger.defaultLogger.debug("invalidAuthData")
-                return
-            }
-            guard let formatCBOR = decodedAttestationObject["fmt"],
-                case let .utf8String(format) = formatCBOR,
-                let attestationFormat = AttestationFormat(rawValue: format) else {
-                Logger.defaultLogger.debug("invalidFmt")
-                return
-            }
-
-            guard let attestationStatement = decodedAttestationObject["attStmt"] else {
-                Logger.defaultLogger.debug("missingAttStmt")
-                return
-                
-            }
-            
-        let authenticatorData = try? AuthenticatorData(bytes: Data(authDataBytes))
-            Logger.defaultLogger.debug("authenticatorData : \(authenticatorData!.attestedData!.publicKey.hexString), \(authenticatorData!.attestedData!.credentialID.hexString))")
-            
-            guard let decodedPublicKey = try! CBOR.decode(authenticatorData!.attestedData!.publicKey) else {
-                Logger.defaultLogger.debug("decodedPublicKey error")
-                return
-            }
-            
-             
-            let x = decodedPublicKey[-2]
-            print("x \(x!.toUInt8Array().hexString)")
-            let y = decodedPublicKey[-3]
-            print("y \(y!.toUInt8Array().hexString)")
-            
-            //TODO: Clean
-            defaults.set(x!.toUInt8Array().hexString, forKey: "publicX")
-            defaults.set(y!.toUInt8Array().hexString, forKey: "publicY")
-            self.publicX = BigUInt(hex: x!.toUInt8Array().hexString)!
-            self.publicY = BigUInt(hex: y!.toUInt8Array().hexString)!
-            
-        } else if let credential = authorization.credential as? ASAuthorizationPlatformPublicKeyCredentialAssertion {
-           // Take steps to verify the challenge.
-            Logger.defaultLogger.debug("verify")
-            Logger.defaultLogger.debug("A passkey was used to sign in: \(credential)")
-            credentialContinuation?.resume(returning: credential)
-
-            
-         } else {
-           // Handle other authentication cases, such as Sign in with Apple.
-             credentialContinuation?.resume(throwing: EthereumAccountError.signError)
-             Logger.defaultLogger.debug("other")
-       }
+        default:
+            Logger.defaultLogger.error("Unsupported credential action")
+            signInContinuation?.resume(throwing: EthereumAccountError.signError)
+            return
+        }
     }
     
-    
-   public func signUp(domain: String, name: String, userID: Data) {
-        let platformProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: domain)
-        let platformKeyRequest = platformProvider.createCredentialRegistrationRequest(challenge: "0x33".web3.hexData!, name: name, userID: userID)
-        let authController = ASAuthorizationController(authorizationRequests: [platformKeyRequest])
-        authController.delegate = self
-        //authController.presentationContextProvider = self
-        authController.performRequests()
-    }
-    
-    func signIn(domain: String, challenge: Data) {
-      let publicKeyCredentialProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: domain)
-      let assertionRequest = publicKeyCredentialProvider.createCredentialAssertionRequest(challenge: challenge)
-      
-      // Pass in any mix of supported sign-in request types.
-      let authController = ASAuthorizationController(authorizationRequests: [ assertionRequest ] )
-      authController.delegate = self
-     // authController.presentationContextProvider = self
-      
-     
-      // If credentials are available, presents a modal sign-in sheet.
-      // If there are no locally saved credentials, the system presents a QR code to allow signing in with a
-      // passkey from a nearby device.
-        //if #available(iOS 16.0, *) {
-         //   authController.performRequests(options: .preferImmediatelyAvailableCredentials)
-        //} else {
-            authController.performRequests()
-        //}
-    }
-
      public func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: any Error) {
-         credentialContinuation?.resume(throwing: EthereumAccountError.signError)
-         Logger.defaultLogger.debug("la \(error)")
+         Logger.defaultLogger.error("AuthorizationController error: \(error)")
+         signInContinuation?.resume(throwing: EthereumAccountError.signError)
      }
 }
