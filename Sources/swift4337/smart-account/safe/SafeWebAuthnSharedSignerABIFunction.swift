@@ -5,6 +5,7 @@
 //  Created by Frederic DE MATOS on 16/07/2024.
 //
 
+import Foundation
 import web3
 import BigInt
 
@@ -46,4 +47,13 @@ struct ConfigureFunction: ABIFunction {
         try encoder.encode(y)
         try encoder.encode(verifiers)
     }
+    
+    // TODO: Web3Swift does not support tuple parameters. Replace function selector with the correct one. Later, implement tuple support for Web3Swift and remove this fix.
+    public func data() throws -> Data? {
+       let encoder = ABIFunctionEncoder(Self.name)
+       try encode(to: encoder)
+       let data = try encoder.encoded()
+
+       return data.web3.hexString.replacingOccurrences(of: "0xdd8c7d2b", with: "0x0dd9692f").web3.hexData
+   }
 }

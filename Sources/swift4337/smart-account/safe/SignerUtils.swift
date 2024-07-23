@@ -80,12 +80,9 @@ public struct SignerUtils {
         let verifiers = EthereumAddress(safeConfig.safeP256VerifierAddress).asNumber()!
         
         
-        guard var configureData = try ConfigureFunction(contract: EthereumAddress(safeConfig.safeWebAuthnSharedSignerAddress), x: passkeySigner.publicX, y: passkeySigner.publicY, verifiers: verifiers).transaction().data else {
+        guard let configureData = try ConfigureFunction(contract: EthereumAddress(safeConfig.safeWebAuthnSharedSignerAddress), x: passkeySigner.publicX, y: passkeySigner.publicY, verifiers: verifiers).data() else {
             throw SmartAccountError.errorGettingInitCode
         }
-        
-        //TODO: DIRTY FIX:
-        configureData = configureData.web3.hexString.replacingOccurrences(of: "0xdd8c7d2b", with: "0x0dd9692f").web3.hexData!
         
         let pakedMultiSend = try [MultiSendTransaction(to:  EthereumAddress(safeConfig.safeModuleSetupAddress), data: enableModulesCallData),MultiSendTransaction(to:  EthereumAddress(safeConfig.safeWebAuthnSharedSignerAddress), data: configureData),
        ].pack()
