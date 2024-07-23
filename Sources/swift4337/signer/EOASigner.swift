@@ -14,11 +14,12 @@ extension EthereumAccount {
     }
 }
 
-class EOASigner: SignerProtocol {
-
+public class EOASigner: SignerProtocol {
+    
+  
     let ethereumAccount: EthereumAccount
     
-    var address: EthereumAddress {
+    public var address: EthereumAddress {
         return self.ethereumAccount.address
     }
     
@@ -26,8 +27,11 @@ class EOASigner: SignerProtocol {
         self.ethereumAccount = ethereumAccount
     }
     
-    func signMessage(message: web3.TypedData) async throws -> String {
+    public func signMessage(message: web3.TypedData) async throws -> String {
         return try self.ethereumAccount.signMessage(message: message)
     }
+    
+    public func dummySignature() throws -> String { return "0xecececececececececececececececececececececececececececececececec"}
+
     
 }

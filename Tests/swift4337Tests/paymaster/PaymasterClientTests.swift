@@ -29,7 +29,8 @@ class PaymasterClientTests: XCTestCase {
                                    callData: "0x7bb374280000000000000000000000000338dcd5512ae8f3c481c33eb4b6eedf632d1d2f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000406661abd00000000000000000000000000000000000000000000000000000000", preVerificationGas: "0xef1c", callGasLimit: "0x163a2",
                                    verificationGasLimit: "0x1b247",
                                    maxFeePerGas: "0x01e3fb094e",
-                                   maxPriorityFeePerGas: "0x53cd81aa"
+                                   maxPriorityFeePerGas: "0x53cd81aa",
+                                   signature: "0x"
         )
         
         let sponsorResponse = try await self.paymaster.pm_sponsorUserOperation(userOp, entryPoint: EthereumAddress(SafeConfig.entryPointV7().entryPointAddress))

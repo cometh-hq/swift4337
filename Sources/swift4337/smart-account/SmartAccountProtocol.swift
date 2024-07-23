@@ -83,7 +83,8 @@ extension SmartAccountProtocol{
                                           nonce: nonce.web3.hexString,
                                           factory: factory,
                                           factoryData: factoryData,
-                                          callData: callData.web3.hexString)
+                                          callData: callData.web3.hexString,
+                                          signature: try signer.dummySignature())
         
         let gasFee = try await gasEstimator.getGasFees()
         

@@ -84,6 +84,31 @@ public class PasskeySigner:NSObject, SignerProtocol, ASAuthorizationControllerDe
    }
     
     
+    
+    public func dummySignature() throws ->  String {
+        let dummyAuthenticatorData = "0xfefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefe04fefefefe".web3.hexData!
+        let dummyClientData_fields = "\"origin\":\"http://safe.global\",\"padding\":\"This pads the clientDataJSON so that we can leave room for additional implementation specific fields for a more accurate 'preVerificationGas' estimate.\""
+        
+ 
+        let dummyR = BigUInt(hex: "0xecececececececececececececececececececececececececececececececec")!;
+        let dummyS = BigUInt(hex: "0xd5ad5ad5ad5ad5ad5ad5ad5ad5ad5ad5ad5ad5ad5ad5ad5ad5ad5ad5ad5ad5af")!;
+        
+        let signatureBytes = try WebauthnCredentialData.getSignatureBytes(authenticatorData: dummyAuthenticatorData,
+                                                                          clientDataFields: dummyClientData_fields,
+                                                                          r: dummyR,
+                                                                          s: dummyS)
+                            
+        let safeSignature = SafeSignature(signer: self.address.asString(), data: signatureBytes.web3.hexString, dynamic: true)
+        
+        let signature = SignerUtils.buildSignatureBytes(signatures: [safeSignature])
+        
+        let validUntilEncoded =  try ABIEncoder.encode(BigUInt(0), uintSize: 48)
+        let validAfterEncoded =  try ABIEncoder.encode(BigUInt(0), uintSize: 48)
+        
+        let signaturePacked =  [validUntilEncoded.bytes, validAfterEncoded.bytes,  signature.web3.hexData!.bytes].flatMap { $0 }
+        return signaturePacked.hexString
+    }
+    
     ///
     ///
     ///

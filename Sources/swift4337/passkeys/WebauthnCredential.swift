@@ -103,13 +103,21 @@ public struct WebauthnCredentialData {
         return fields
     }
     
+
     func encodeWebAuthnSignature() throws -> Data {
         var r: BigUInt
         var s: BigUInt
         (r, s) = try self.extractRS()
         
         let clientDataFields = try self.decodeClientDataFields()
-        
+       
+        let signatureBytes = try WebauthnCredentialData.getSignatureBytes(authenticatorData: self.authenticatorData, clientDataFields: clientDataFields, r: r, s: s)
+        return signatureBytes
+    }
+    
+    
+    
+    public static  func getSignatureBytes(authenticatorData: Data, clientDataFields: String, r: BigUInt, s: BigUInt) throws -> Data {
         let authenticatorDataOffset = BigUInt(32 * 4)
         let clientDataFieldsOffset = authenticatorDataOffset + BigUInt(authenticatorData.calculatePaddedLength())
         
@@ -117,7 +125,7 @@ public struct WebauthnCredentialData {
         let encodedClientDataFieldsOffset = try ABIEncoder.encode(clientDataFieldsOffset).bytes
         let encodedR = try ABIEncoder.encode(r).bytes
         let encodedS = try ABIEncoder.encode(s).bytes
-        let encodedAuthenticatorData = try ABIEncoder.encode(self.authenticatorData).bytes
+        let encodedAuthenticatorData = try ABIEncoder.encode(authenticatorData).bytes
 
         let encodedClientDataFields = try ABIEncoder.encode(clientDataFields).bytes
         

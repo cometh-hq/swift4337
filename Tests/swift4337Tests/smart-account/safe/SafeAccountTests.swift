@@ -45,7 +45,7 @@ class SafeAccountTests: XCTestCase {
                                    preVerificationGas:"0xea60",
                                    callGasLimit: "0x1e8480",
                                    verificationGasLimit: "0x07a120", maxFeePerGas:"0x02ee7c55e2",
-                                   maxPriorityFeePerGas: "0x1f2ecf7f")
+                                   maxPriorityFeePerGas: "0x1f2ecf7f", signature: "0x")
                                    
         
         let expected = "0x000000000000000000000000298adde4bafae7cf44a9bf2a1881a836716592c85ac5f6445e673647d6cc907e3af6d065c591f07173e83246ef649147b0034bf119da693c4025be55206e9db91c"

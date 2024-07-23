@@ -33,7 +33,7 @@ public struct UserOperation: Encodable, Decodable {
     public var paymasterVerificationGasLimit: String?
     public var paymasterPostOpGasLimit: String?
 
-    public var signature: String?
+    public var signature: String
     
     
     public init(sender: String,
@@ -50,7 +50,7 @@ public struct UserOperation: Encodable, Decodable {
                 paymasterData: String? = nil,
                 paymasterVerificationGasLimit: String? = nil,
                 paymasterPostOpGasLimit: String? = nil,
-                signature: String = "0x000000000000000000000000") {
+                signature: String) {
         self.sender = sender
         self.nonce = nonce
         self.factory = factory

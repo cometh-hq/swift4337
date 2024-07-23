@@ -10,5 +10,7 @@ import web3
 
 public protocol SignerProtocol {
     var address: EthereumAddress { get }
+    
     func signMessage(message: TypedData) async throws -> String
+    func dummySignature() throws -> String
 }
