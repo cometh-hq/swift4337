@@ -157,7 +157,7 @@ On chain contracts use ERC-1271 and WebAuthn standards for verifying WebAuthn si
 ```swift
 import swift4337
 
- let signer = try await SafePasskeySigner(domain:domain, name:"UserName")
+let signer = try await SafePasskeySigner(domain:domain, name:"UserName")
 
 ```
 
@@ -167,7 +167,7 @@ Then when a request to sign a message his received, the user has to use its biom
 
 > [!IMPORTANT]  
 > You need to have an associated domain with the webcredentials service type to use Passkey Signer otherwise it will returns an error.
-> See apple documentation on Supporting associated domains for more information.
+> See apple documentation on [Supporting associated domains]("https://developer.apple.com/documentation/Xcode/supporting-associated-domains") for more information.
 
 > [!IMPORTANT]  
 > When initializing a Safe Account with a Passkey signer it will use the Safe WebAuthn Shared Signer to respect 4337 limitation. For more information have a look at [Safe Documentation]("https://github.com/safe-global/safe-modules/tree/main/modules/passkey/contracts/4337#safe-webauthn-shared-signer")
