@@ -12,6 +12,8 @@ Swift4337 is a Swift SDK for building with [ERC-4337](https://eips.ethereum.org/
 
 - **Paymaster**: Enables paymaster for gas fee sponsorship.
 
+- **Signers**: Supports both traditional EOA signers and Passkey signers, enabling flexible and secure authentication mechanisms.
+
 - **Modular and Extensible**: Easily create and integrate your own smart account, bundlers, paymasters, and signers.
 
 ## Installation
@@ -144,6 +146,34 @@ To be compatible with Swift4337, a smart account must provide the following meth
 
 To control a Smart Account, users need a Signer for authentication.
 
+#### Passkey Signer
+
+Passkeys provide enhanced security and simplify authentication through quick methods like biometrics.
+Supported by Apple, Google, and Microsoft, they are widely implemented on iOS and Android.
+Their adoption improves the user experience by making authentication faster and simpler.
+
+On chain contracts use ERC-1271 and WebAuthn standards for verifying WebAuthn signatures with the secp256r1 curve.
+
+```swift
+import swift4337
+
+ let signer = try await SafePasskeySigner(domain:domain, name:"UserName")
+
+```
+
+At the instantiation of the Signer was not already created for this name, the process of the registration is started and user will have to use his biometrie.
+
+Then when a request to sign a message his received, the user has to use its biometric to sign the message.
+
+> [!IMPORTANT]  
+> You need to have an associated domain with the webcredentials service type to use Passkey Signer otherwise it will returns an error.
+> See apple documentation on Supporting associated domains for more information.
+
+> [!IMPORTANT]  
+> When initializing a Safe Account with a Passkey signer it will use the Safe WebAuthn Shared Signer to respect 4337 limitation. For more information have a look at [Safe Documentation]("https://github.com/safe-global/safe-modules/tree/main/modules/passkey/contracts/4337#safe-webauthn-shared-signer")
+
+#### EOA Signer
+
 Create an instance of EthereumAccount with an EthereumKeyStorage provider.
 
 **NOTE: We recommend implementing your own KeyStorage provider instead of relying on the provided EthereumKeyLocalStorage class. The provided class is only an example conforming to the EthereumSingleKeyStorageProtocol. For more details check [web3.swift repository](https://github.com/argentlabs/web3.swift)**.
@@ -153,7 +183,7 @@ import web3
 
 // This is just an example. EthereumKeyLocalStorage should not be used in production code
 let keyStorage = EthereumKeyLocalStorage()
-let account = try? EthereumAccount.create(replacing: keyStorage, keystorePassword: "MY_PASSWORD")
+let eoaSigner = try EthereumAccount.create(replacing: keyStorage, keystorePassword: "MY_PASSWORD").getSigner()
 ```
 
 ### RPC
