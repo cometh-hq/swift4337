@@ -14,7 +14,7 @@ import BigInt
 
 class PasskeySignerTests: XCTestCase {
     
-    let signerPasskey = SafePasskeySigner(publicX: BigUInt("24496937152968818026222377611516525898032551233447781531236978925153890247522"), publicY: BigUInt("4502259600096091720265343022608124325285676227578744180405546100919876529868"), domain: "string")
+    let signerPasskey = SafePasskeySigner(publicKey: PublicKey(x: "0x3628C66B9BA2B579E51E6B7DDCBF7526C0B882678655BDE48A7BB1504662A362", y: "0x9F4304A01B5B94BCEC32D29DAB08F3ABC5E305AE05FB953D0372BCB7E752ECC"), name: "test", domain: "srn")
     
     func testBuildSignatureBytesIsOk() async throws {
         

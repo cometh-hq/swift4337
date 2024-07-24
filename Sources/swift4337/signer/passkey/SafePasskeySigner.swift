@@ -19,45 +19,38 @@ public enum PasskeySignerError: Error, Equatable {
 
 public class SafePasskeySigner:NSObject, PasskeySignerProtocol {
  
-    var publicX: BigUInt = BigUInt(0)
-    var publicY: BigUInt = BigUInt(0)
+    public var publicKey: PublicKey
     
-    let domain: String
-    
+    public let domain: String
+    public let name: String
     public let address: EthereumAddress;
    
     public var authorizationDelegate: AuthorizationDelegate = AuthorizationDelegate()
     
-    init(publicX: BigUInt, publicY: BigUInt, domain: String, address: EthereumAddress = EthereumAddress(SafeConfig.entryPointV7().safeWebAuthnSharedSignerAddress)) {
-        self.publicX = publicX
-        self.publicY = publicY
+    init(publicKey: PublicKey, name: String,  domain: String, address: EthereumAddress = EthereumAddress(SafeConfig.entryPointV7().safeWebAuthnSharedSignerAddress)) {
+        self.publicKey = publicKey
         self.domain = domain
         self.address = address
+        self.name = name
         super.init()
     }
     
     public init(domain: String, name: String, address: EthereumAddress = EthereumAddress(SafeConfig.entryPointV7().safeWebAuthnSharedSignerAddress)) async throws{
         self.domain = domain
+        self.name = name
         self.address = address
-        
+        self.publicKey = PublicKey(x: "", y: "")
         super.init()
-    
-        let (xFromPref, yFromPref) = self.getXYFromUserPref()
-        
-        if let x = xFromPref, let y = yFromPref {
-            self.publicX = x
-            self.publicY = y
-        } else {
-            try await self.createPasskey(domain: domain, name: name)
+       
+        guard let publicKey = try self.getPublicKeyFromUserPref() else {
+            self.publicKey = try await self.createPasskey(domain: domain, name: name)
+            return
         }
+        
+        self.publicKey = publicKey
     }
     
-    public func setPublicXY(x: BigUInt, y: BigUInt) {
-        self.publicX = x
-        self.publicY = y
-    }
-    
-    func formatSignature (_ signature: Data) -> String {
+    public func formatSignature (_ signature: Data) -> String {
         let safeSignature  =  SafeSignature(signer: self.address.asString(), data: signature.web3.hexString, dynamic: true)
         return SignerUtils.buildSignatureBytes(signatures: [safeSignature])
     }

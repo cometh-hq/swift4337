@@ -42,45 +42,65 @@ public class AuthorizationDelegate:NSObject, ASAuthorizationControllerDelegate {
      }
     
 }
-protocol PasskeySignerProtocol: SignerProtocol  {
-    var publicX: BigUInt { get set }
-    var publicY: BigUInt { get set }
+public protocol PasskeySignerProtocol: SignerProtocol  {
     
+    var publicKey: PublicKey  { get set }
+    
+    var name: String { get }
     var domain: String { get }
     var authorizationDelegate: AuthorizationDelegate {get}
     
-    func setPublicXY(x: BigUInt, y: BigUInt)
     func formatSignature(_ signature: Data) -> String
 }
 
 extension PasskeySignerProtocol {
     
-    public func publicXKey() -> String{
-        return "publicX"
-    }
     
-    public func publicYKey() -> String{
-        return "publicY"
-    }
-    
-    public func setXYUserPref(x: String, y: String) {
-        UserDefaults.standard.set(x, forKey: self.publicXKey())
-        UserDefaults.standard.set(y, forKey: self.publicYKey())
-    }
-    
-    public func getXYFromUserPref() -> (x: BigUInt?, y: BigUInt?){
-        var x: BigUInt?
-        var y: BigUInt?
+    public var publicX: BigUInt {
         
-        if let xHex = UserDefaults.standard.string(forKey: self.publicXKey()) {
-            x = BigUInt(hex: xHex)
+        if let publicX =  BigUInt(hex: self.publicKey.x) {
+            return publicX
         }
         
-        if let yHex = UserDefaults.standard.string(forKey: self.publicYKey()) {
-            y = BigUInt(hex: yHex)
+        return BigUInt(0)
+    }
+    
+    public var publicY: BigUInt {
+        if let publicY =  BigUInt(hex: self.publicKey.y) {
+            return publicY
+        }
+        return BigUInt(0)
+    }
+    
+    public func publicKeyUserPrefKey() -> String {
+        return "passkey-\(self.name)"
+    }
+    
+    
+    public func setPublicKeyUserPref(_ publicKey:PublicKey) throws {
+        let jsonData = try JSONEncoder().encode(publicKey)
+        
+        guard let jsonString = String(data: jsonData, encoding: .utf8) else {
+            Logger.defaultLogger.error(" Error while encoding public key to json string for :\(self.name)")
+            throw EthereumAccountError.createAccountError
+        }
+        UserDefaults.standard.set(jsonString, forKey: self.publicKeyUserPrefKey())
+        Logger.defaultLogger.info("Storing passkey: \(self.name) - public key : \(jsonString)")
+    }
+    
+    public func getPublicKeyFromUserPref() throws -> PublicKey?{
+        guard let json = UserDefaults.standard.string(forKey: self.publicKeyUserPrefKey()) else {
+            Logger.defaultLogger.info("No public key stored for passkey \(self.name)")
+            return nil
         }
         
-        return (x,y)
+        Logger.defaultLogger.info("User pref for passkey \(self.name) : \(json)")
+        
+        guard let jsonData = json.data(using: .utf8) else {
+            Logger.defaultLogger.info("Invalid public key stored for passkey \(self.name)")
+            return nil
+        }
+        return try JSONDecoder().decode(PublicKey.self, from:jsonData )
     }
 
     public func signUp(domain: String, name: String, userID: Data) {
@@ -130,7 +150,7 @@ extension PasskeySignerProtocol {
    }
     
     
-    public func createPasskey(domain: String, name: String) async throws {
+    func createPasskey(domain: String, name: String) async throws -> PublicKey {
         
         let credential =  try await withCheckedThrowingContinuation { continuation in
             self.authorizationDelegate.signUpContinuation = continuation
@@ -170,17 +190,10 @@ extension PasskeySignerProtocol {
             throw  EthereumAccountError.createAccountError
         }
     
-        guard let xBigUInt =  BigUInt(hex: x) else {
-            Logger.defaultLogger.error("invalid x error")
-            throw  EthereumAccountError.createAccountError
-        }
+        let publicKey = PublicKey(x: x, y: y)
+        try self.setPublicKeyUserPref(publicKey)
         
-        guard let yBigUInt =  BigUInt(hex: y) else {
-            Logger.defaultLogger.error("invalid y error")
-            throw  EthereumAccountError.createAccountError
-        }
-        self.setPublicXY(x: xBigUInt, y: yBigUInt)
-        self.setXYUserPref(x:x, y:y)
+        return publicKey
     }
     
 }
