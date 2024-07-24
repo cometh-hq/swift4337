@@ -195,7 +195,7 @@ guard let clientUrl = URL(string: "https://an-infura-or-similar-url.com/123") el
 let client = EthereumHttpClient(url: clientUrl)
 ```
 
-All available methods are available [here](https://github.com/argentlabs/web3.swift/blob/develop/web3swift/src/Client/Protocols/EthereumClientProtocol.swift).
+All available methods are [here](https://github.com/argentlabs/web3.swift/blob/develop/web3swift/src/Client/Protocols/EthereumClientProtocol.swift).
 
 Swift4337 provide [an extension](https://github.com/cometh-hq/swift4337/blob/main/Sources/swift4337/gas-estimator/EthereumRPCProtocol%2Beth_feeHistory.swift) to use eth_feeHistory.
 
