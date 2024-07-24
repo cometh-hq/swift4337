@@ -161,13 +161,13 @@ let signer = try await SafePasskeySigner(domain:domain, name:"UserName")
 
 ```
 
-At the instantiation of the Signer was not already created for this name, the process of the registration is started and user will have to use his biometrie.
+At the instantiation of the Signer, if the passkey was not already created for this name, the process of the registration is started and user will have to use his biometrics.
 
-Then when a request to sign a message his received, the user has to use its biometric to sign the message.
+Then when a request to sign a message is received, the user has to use its biometric to sign the message.
 
 > [!IMPORTANT]  
-> You need to have an associated domain with the webcredentials service type to use Passkey Signer otherwise it will returns an error.
-> See apple documentation on [Supporting associated domains](https://developer.apple.com/documentation/Xcode/supporting-associated-domains) for more information.
+> You need to have an associated domain with the webcredentials service type to use Passkey Signer otherwise it will return an error.
+> See Apple documentation on [Supporting associated domains](https://developer.apple.com/documentation/Xcode/supporting-associated-domains) for more information.
 
 > [!IMPORTANT]  
 > When initializing a Safe Account with a Passkey signer it will use the Safe WebAuthn Shared Signer to respect 4337 limitation. For more information have a look at [Safe Documentation](https://github.com/safe-global/safe-modules/tree/main/modules/passkey/contracts/4337#safe-webauthn-shared-signer)
