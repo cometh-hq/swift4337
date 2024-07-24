@@ -55,7 +55,6 @@ public protocol PasskeySignerProtocol: SignerProtocol  {
 
 extension PasskeySignerProtocol {
     
-    
     public var publicX: BigUInt {
         
         if let publicX =  BigUInt(hex: self.publicKey.x) {
@@ -75,7 +74,6 @@ extension PasskeySignerProtocol {
     public func publicKeyUserPrefKey() -> String {
         return "passkey-\(self.name)"
     }
-    
     
     public func setPublicKeyUserPref(_ publicKey:PublicKey) throws {
         let jsonData = try JSONEncoder().encode(publicKey)
@@ -102,28 +100,6 @@ extension PasskeySignerProtocol {
         }
         return try JSONDecoder().decode(PublicKey.self, from:jsonData )
     }
-
-    public func signUp(domain: String, name: String, userID: Data) {
-         let platformProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: domain)
-         let platformKeyRequest = platformProvider.createCredentialRegistrationRequest(challenge: "0x33".web3.hexData!, name: name, userID: userID)
-         let authController = ASAuthorizationController(authorizationRequests: [platformKeyRequest])
-            authController.delegate = self.authorizationDelegate
-         authController.performRequests()
-     }
-     
-     func signIn(domain: String, challenge: Data) {
-         let publicKeyCredentialProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: domain)
-         let assertionRequest = publicKeyCredentialProvider.createCredentialAssertionRequest(challenge: challenge)
-         let authController = ASAuthorizationController(authorizationRequests: [ assertionRequest ] )
-         authController.delegate = self.authorizationDelegate
-       
-         if #available(iOS 16.0, *) {
-             authController.performRequests(options: .preferImmediatelyAvailableCredentials)
-         } else {
-             authController.performRequests()
-         }
-     }
-
     
     public func signMessage(message: web3.TypedData) async throws -> String {
         let hash = try message.signableHash()
@@ -149,6 +125,32 @@ extension PasskeySignerProtocol {
         return self.formatSignature(encodedWebAuthnSignature)
    }
     
+    public func clearStorage() {
+        Logger.defaultLogger.info("Clear storage for passkey \(self.name)")
+        UserDefaults.standard.removeObject(forKey: self.publicKeyUserPrefKey())
+    }
+
+    func signUp(domain: String, name: String, userID: Data) {
+         let platformProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: domain)
+         let platformKeyRequest = platformProvider.createCredentialRegistrationRequest(challenge: "0x33".web3.hexData!, name: name, userID: userID)
+         let authController = ASAuthorizationController(authorizationRequests: [platformKeyRequest])
+            authController.delegate = self.authorizationDelegate
+         authController.performRequests()
+     }
+     
+     func signIn(domain: String, challenge: Data) {
+         let publicKeyCredentialProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: domain)
+         let assertionRequest = publicKeyCredentialProvider.createCredentialAssertionRequest(challenge: challenge)
+         let authController = ASAuthorizationController(authorizationRequests: [ assertionRequest ] )
+         authController.delegate = self.authorizationDelegate
+       
+         if #available(iOS 16.0, *) {
+             authController.performRequests(options: .preferImmediatelyAvailableCredentials)
+         } else {
+             authController.performRequests()
+         }
+     }
+
     
     func createPasskey(domain: String, name: String) async throws -> PublicKey {
         
