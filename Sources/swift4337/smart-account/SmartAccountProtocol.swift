@@ -15,6 +15,7 @@ public enum SmartAccountError: Error, Equatable {
     case errorPredictingAddress
     case errorGettingInitCode
     case errorAccountNotDeployed
+    case errorUnsupportedSigner
 }
 
 public struct EIP712Domain {
@@ -30,7 +31,7 @@ public struct EIP712Domain {
 public protocol SmartAccountProtocol {
     
     var address: EthereumAddress {get}
-    var signer: EthereumAccount {get}
+    var signer: SignerProtocol {get}
     var gasEstimator: GasEstimatorProtocol {get}
     
     var rpc: EthereumRPCProtocol {get}
@@ -51,7 +52,7 @@ public protocol SmartAccountProtocol {
     func getFactoryData() async throws -> Data
     func getCallData(to: EthereumAddress, value:BigUInt, data:Data) throws -> Data
     func getOwners() async throws -> [EthereumAddress]
-    func signUserOperation(_ userOperation: UserOperation) throws -> Data
+    func signUserOperation(_ userOperation: UserOperation) async throws -> Data
 }
 
 extension SmartAccountProtocol{
@@ -82,7 +83,8 @@ extension SmartAccountProtocol{
                                           nonce: nonce.web3.hexString,
                                           factory: factory,
                                           factoryData: factoryData,
-                                          callData: callData.web3.hexString)
+                                          callData: callData.web3.hexString,
+                                          signature: try signer.dummySignature())
         
         let gasFee = try await gasEstimator.getGasFees()
         
@@ -120,7 +122,7 @@ extension SmartAccountProtocol{
     
     public func sendUserOperation(to: EthereumAddress, value: BigUInt = BigUInt(0), data: Data = Data()) async throws -> String{
         var userOperation = try await self.prepareUserOperation(to: to, value: value, data: data)
-        userOperation.signature = try self.signUserOperation(userOperation).web3.hexString
+        userOperation.signature = try await self.signUserOperation(userOperation).web3.hexString
         return try await self.bundler.eth_sendUserOperation(userOperation, entryPoint: self.entryPointAddress)
     }
     
