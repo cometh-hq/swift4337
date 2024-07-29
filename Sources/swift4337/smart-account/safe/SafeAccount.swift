@@ -115,6 +115,11 @@ public struct SafeAccount: SmartAccountProtocol  {
         return createProxyWithNonceData
     }
     
+    public func deployAndEnablePasskeySigner() async throws -> EthereumAddress {
+        
+        return EthereumAddress.zero
+    }
+    
 
     
     public static func predictAddress(signer: SignerProtocol, rpc: EthereumRPCProtocol, safeConfig: SafeConfig) async throws -> EthereumAddress {
@@ -138,5 +143,8 @@ public struct SafeAccount: SmartAccountProtocol  {
         let predictedAddress = try Create2.getCreate2Address(from: safeConfig.proxyFactory, salt: saltNonce.bytes, initCodeHash: keccack256DeploymentCode.bytes)
         return EthereumAddress(predictedAddress)
     }
+    
+    
+
  
 }

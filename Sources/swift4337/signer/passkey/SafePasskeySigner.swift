@@ -23,7 +23,7 @@ public class SafePasskeySigner:NSObject, PasskeySignerProtocol {
     
     public let domain: String
     public let name: String
-    public let address: EthereumAddress;
+    public var address: EthereumAddress;
    
     public var authorizationDelegate: AuthorizationDelegate = AuthorizationDelegate()
     
@@ -35,10 +35,11 @@ public class SafePasskeySigner:NSObject, PasskeySignerProtocol {
         super.init()
     }
     
-    public init(domain: String, name: String, address: EthereumAddress = EthereumAddress(SafeConfig.entryPointV7().safeWebAuthnSharedSignerAddress)) async throws{
+    public init(domain: String, name: String, isSharedWebauthnSigner:Bool = true, safeConfig: SafeConfig = SafeConfig.entryPointV7()) async throws{
         self.domain = domain
         self.name = name
-        self.address = address
+        self.address = EthereumAddress.zero
+       
         self.publicKey = PublicKey(x: "", y: "")
         super.init()
        
@@ -48,6 +49,15 @@ public class SafePasskeySigner:NSObject, PasskeySignerProtocol {
         }
         
         self.publicKey = publicKey
+        
+        if (isSharedWebauthnSigner == true) {
+            self.address = EthereumAddress(safeConfig.safeWebAuthnSharedSignerAddress)
+        } else {
+            let verifiers = EthereumAddress(safeConfig.safeP256VerifierAddress).asNumber()!
+          
+            let getSignerFunction = GetSignerFunction(contract:  EthereumAddress(safeConfig.safeWebauthnSignerFactory), x: self.publicX, y: self.publicY, verifiers: verifiers)
+          
+        }
     }
     
     public func formatSignature (_ signature: Data) -> String {
