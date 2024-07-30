@@ -45,18 +45,18 @@ struct GetSignerFunction: ABIFunction {
     public func encode(to encoder: ABIFunctionEncoder) throws {
         try encoder.encode(x)
         try encoder.encode(y)
-        try encoder.encode(verifiers)
+        try encoder.encode(verifiers, staticSize: 176)
     }
 }
 
 public struct GetSignerResponse: ABIResponse, MulticallDecodableResponse {
-       public static var types: [ABIType.Type] = [ABIArray<EthereumAddress>.self]
-       public let value: [EthereumAddress]
-
-       public init?(values: [ABIDecoder.DecodedValue]) throws {
-           self.value = try values[0].decodedArray()
-       }
-   }
+    public static var types: [ABIType.Type] = [EthereumAddress.self]
+    public let value: EthereumAddress
+    
+    public init?(values: [ABIDecoder.DecodedValue]) throws {
+        self.value = try values[0].decoded()
+    }
+}
 
 struct CreateSignerFunction: ABIFunction {
     
@@ -92,6 +92,6 @@ struct CreateSignerFunction: ABIFunction {
     public func encode(to encoder: ABIFunctionEncoder) throws {
         try encoder.encode(x)
         try encoder.encode(y)
-        try encoder.encode(verifiers)
+        try encoder.encode(verifiers, staticSize: 176)
     }
 }
