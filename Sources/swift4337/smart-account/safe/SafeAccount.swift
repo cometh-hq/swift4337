@@ -11,6 +11,8 @@ import os
 
 
 public struct SafeAccount: SmartAccountProtocol  {
+
+    
     public let address: EthereumAddress
     public let safeConfig: SafeConfig
     public let signer: SignerProtocol
@@ -51,9 +53,9 @@ public struct SafeAccount: SmartAccountProtocol  {
     }
     
 
-    public func getCallData(to: EthereumAddress, value:BigUInt, data:Data) throws -> Data{
+    public func getCallData(to: EthereumAddress, value:BigUInt, data:Data, delegateCall: Bool) throws -> Data{
         let encoder = ExecuteUserOpFunction(contract: self.address, to: to,
-                       value: value, calldata:data , operation: 0)
+                                            value: value, calldata:data , operation: delegateCall ? 1 : 0 )
          
         let encodedTxCall = try encoder.transaction()
         
@@ -139,9 +141,7 @@ public struct SafeAccount: SmartAccountProtocol  {
             throw  SmartAccountError.errorGeneratingCallDate
         }
         
-        //MultiSendTransaction(to: safeWebauthnSignerFactory, data: createSignerData)
-        
-        let pakedMultiSend = try [MultiSendTransaction(to:  self.address, data: addOwnerData)].pack()
+        let pakedMultiSend = try [MultiSendTransaction(op: BigUInt(0), to: safeWebauthnSignerFactory, data: createSignerData), MultiSendTransaction(op: BigUInt(0), to:  self.address, data: addOwnerData)].pack()
         
         
         guard let multiSendData = try MultiSendFunction(contract: EthereumAddress(safeConfig.safeMultiSendAddress), transactions: pakedMultiSend).transaction().data else {
@@ -150,7 +150,7 @@ public struct SafeAccount: SmartAccountProtocol  {
         
         let safeMultiSendAddress = EthereumAddress(safeConfig.safeMultiSendAddress)
         
-        let userOperationHash = try await self.sendUserOperation(to: safeMultiSendAddress, data: multiSendData)
+        let userOperationHash = try await self.sendUserOperation(to: safeMultiSendAddress, data: multiSendData, delegateCall: true)
         
         return userOperationHash
     }

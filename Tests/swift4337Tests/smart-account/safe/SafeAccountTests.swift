@@ -65,7 +65,7 @@ class SafeAccountTests: XCTestCase {
 
     func testGetCallDataWithOnlyValueIsOk() async throws {
         self.safeAccount = try await SafeAccount(signer: account, rpc: rpc, bundler: bundler)
-        let callData = try safeAccount.getCallData(to: EthereumAddress("0xF64DA4EFa19b42ef2f897a3D533294b892e6d99E"), value: BigUInt(1), data: "0x".web3.hexData!)
+        let callData = try safeAccount.getCallData(to: EthereumAddress("0xF64DA4EFa19b42ef2f897a3D533294b892e6d99E"), value: BigUInt(1), data: "0x".web3.hexData!, delegateCall: false)
         
         let expected = "0x7bb37428000000000000000000000000f64da4efa19b42ef2f897a3d533294b892e6d99e0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
         
@@ -74,7 +74,7 @@ class SafeAccountTests: XCTestCase {
     
     func testGetCallDataWithDataIsOk() async throws {
         self.safeAccount = try await SafeAccount(signer: account, rpc: rpc, bundler: bundler)
-        let callData = try safeAccount.getCallData(to: EthereumAddress("0x0338Dcd5512ae8F3c481c33Eb4b6eEdF632D1d2f"), value: BigUInt(0), data: "0x06661abd".web3.hexData!)
+        let callData = try safeAccount.getCallData(to: EthereumAddress("0x0338Dcd5512ae8F3c481c33Eb4b6eEdF632D1d2f"), value: BigUInt(0), data: "0x06661abd".web3.hexData!, delegateCall: false)
         
         let expected = "0x7bb374280000000000000000000000000338dcd5512ae8f3c481c33eb4b6eedf632d1d2f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000406661abd00000000000000000000000000000000000000000000000000000000"
         

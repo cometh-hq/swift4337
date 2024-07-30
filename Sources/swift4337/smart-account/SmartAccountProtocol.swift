@@ -42,15 +42,15 @@ public protocol SmartAccountProtocol {
     var entryPointAddress: EthereumAddress {get}
     
     // Methods already implemented by SmartAccountProtocol (see extension below)
-    func prepareUserOperation(to: EthereumAddress, value: BigUInt, data: Data) async throws -> UserOperation
-    func sendUserOperation(to: EthereumAddress, value: BigUInt, data: Data) async throws -> String
+    func prepareUserOperation(to: EthereumAddress, value: BigUInt, data: Data, delegateCall: Bool) async throws -> UserOperation
+    func sendUserOperation(to: EthereumAddress, value: BigUInt, data: Data, delegateCall: Bool) async throws -> String
     func isDeployed() async throws -> Bool
     func getNonce(key: BigUInt) async throws -> BigUInt
    
     // Methods to be implemented for each type of smart account
     func getFactoryAddress() -> EthereumAddress
     func getFactoryData() async throws -> Data
-    func getCallData(to: EthereumAddress, value:BigUInt, data:Data) throws -> Data
+    func getCallData(to: EthereumAddress, value:BigUInt, data:Data, delegateCall: Bool) throws -> Data
     func getOwners() async throws -> [EthereumAddress]
     func signUserOperation(_ userOperation: UserOperation) async throws -> Data
     func deployAndEnablePasskeySigner(x:BigUInt, y:BigUInt) async throws -> String 
@@ -71,8 +71,8 @@ extension SmartAccountProtocol{
         return code != "0x"
     }
     
-    public func prepareUserOperation(to: EthereumAddress, value: BigUInt = BigUInt(0), data: Data = Data()) async throws -> UserOperation{
-        let callData = try self.getCallData(to: to, value: value, data: data)
+    public func prepareUserOperation(to: EthereumAddress, value: BigUInt = BigUInt(0), data: Data = Data(), delegateCall: Bool = false) async throws -> UserOperation{
+        let callData = try self.getCallData(to: to, value: value, data: data, delegateCall: delegateCall)
         let nonce = try await self.getNonce()
         
         var factory:String?
@@ -122,8 +122,8 @@ extension SmartAccountProtocol{
     }
 
     
-    public func sendUserOperation(to: EthereumAddress, value: BigUInt = BigUInt(0), data: Data = Data()) async throws -> String{
-        var userOperation = try await self.prepareUserOperation(to: to, value: value, data: data)
+    public func sendUserOperation(to: EthereumAddress, value: BigUInt = BigUInt(0), data: Data = Data(), delegateCall: Bool = false) async throws -> String{
+        var userOperation = try await self.prepareUserOperation(to: to, value: value, data: data, delegateCall: delegateCall)
         userOperation.signature = try await self.signUserOperation(userOperation).web3.hexString
         return try await self.bundler.eth_sendUserOperation(userOperation, entryPoint: self.entryPointAddress)
     }
