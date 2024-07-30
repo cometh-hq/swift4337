@@ -53,7 +53,8 @@ public protocol SmartAccountProtocol {
     func getCallData(to: EthereumAddress, value:BigUInt, data:Data) throws -> Data
     func getOwners() async throws -> [EthereumAddress]
     func signUserOperation(_ userOperation: UserOperation) async throws -> Data
-    func deployAndEnablePasskeySigner() async throws -> EthereumAddress
+    func deployAndEnablePasskeySigner(x:BigUInt, y:BigUInt) async throws -> String 
+    func addOwner(address: EthereumAddress) async throws -> String
 }
 
 extension SmartAccountProtocol{

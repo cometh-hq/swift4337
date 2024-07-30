@@ -115,9 +115,44 @@ public struct SafeAccount: SmartAccountProtocol  {
         return createProxyWithNonceData
     }
     
-    public func deployAndEnablePasskeySigner() async throws -> EthereumAddress {
+    public func addOwner(address: EthereumAddress) async throws -> String {
+        guard let addOwnerData = try AddOwnerWithThresholdFunction(contract: self.address, owner: address, _threshold: BigUInt(1)).transaction().data else {
+            throw  SmartAccountError.errorGeneratingCallDate
+        }
         
-        return EthereumAddress.zero
+        let userOperationHash = try await self.sendUserOperation(to: self.address, data: addOwnerData)
+        return userOperationHash
+    }
+    
+    public func deployAndEnablePasskeySigner(x:BigUInt, y:BigUInt) async throws -> String {
+        let verifiers = EthereumAddress(self.safeConfig.safeP256VerifierAddress).asNumber()!
+        let functionGetSigner =  GetSignerFunction(contract:  EthereumAddress(safeConfig.safeWebauthnSignerFactory), x: x, y: y, verifiers: verifiers)
+        let signerAddress = try await functionGetSigner.call(withClient:self.rpc , responseType: GetSignerResponse.self).value
+        
+        let safeWebauthnSignerFactory = EthereumAddress(self.safeConfig.safeWebauthnSignerFactory)
+        
+        guard let createSignerData = try CreateSignerFunction(contract:safeWebauthnSignerFactory , x: x, y: y, verifiers: verifiers).transaction().data else {
+            throw  SmartAccountError.errorGeneratingCallDate
+        }
+        
+        guard let addOwnerData = try AddOwnerWithThresholdFunction(contract: self.address, owner: signerAddress, _threshold: BigUInt(1)).transaction().data else {
+            throw  SmartAccountError.errorGeneratingCallDate
+        }
+        
+        //MultiSendTransaction(to: safeWebauthnSignerFactory, data: createSignerData)
+        
+        let pakedMultiSend = try [MultiSendTransaction(to:  self.address, data: addOwnerData)].pack()
+        
+        
+        guard let multiSendData = try MultiSendFunction(contract: EthereumAddress(safeConfig.safeMultiSendAddress), transactions: pakedMultiSend).transaction().data else {
+            throw SmartAccountError.errorGeneratingCallDate
+        }
+        
+        let safeMultiSendAddress = EthereumAddress(safeConfig.safeMultiSendAddress)
+        
+        let userOperationHash = try await self.sendUserOperation(to: safeMultiSendAddress, data: multiSendData)
+        
+        return userOperationHash
     }
     
 
