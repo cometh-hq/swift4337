@@ -144,3 +144,43 @@ public struct GetOwnersResponse: ABIResponse, MulticallDecodableResponse {
            self.value = try values[0].decodedArray()
        }
    }
+
+
+//function getOwners() public view override returns (address[] memory) {
+struct AddOwnerWithThresholdFunction: ABIFunction {
+        public static let name = "addOwnerWithThreshold"
+        public let gasPrice: BigUInt?
+        public let gasLimit: BigUInt?
+        public var contract: EthereumAddress
+        public let from: EthereumAddress?
+    
+        public let owner: EthereumAddress
+        public let _threshold: BigUInt
+    
+
+        public init(
+            contract: EthereumAddress,
+            from: EthereumAddress? = nil,
+            gasPrice: BigUInt? = nil,
+            gasLimit: BigUInt? = nil,
+            owner: EthereumAddress,
+            _threshold: BigUInt
+        ) {
+            self.contract = contract
+            self.from = from
+            self.gasPrice = gasPrice
+            self.gasLimit = gasLimit
+            
+            self.owner = owner
+            self._threshold = _threshold
+
+        }
+
+        public func encode(to encoder: ABIFunctionEncoder) throws {
+            try encoder.encode(owner)
+            try encoder.encode(_threshold)
+        }
+   }
+
+
+

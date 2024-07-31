@@ -154,13 +154,6 @@ Their adoption improves the user experience by making authentication faster and 
 
 On chain contracts use ERC-1271 and WebAuthn standards for verifying WebAuthn signatures with the secp256r1 curve.
 
-```swift
-import swift4337
-
-let signer = try await SafePasskeySigner(domain:domain, name:"UserName")
-
-```
-
 At the instantiation of the Signer, if the passkey was not already created for this name, the process of the registration is started and user will have to use his biometrics.
 
 Then when a request to sign a message is received, the user has to use its biometric to sign the message.
@@ -171,6 +164,50 @@ Then when a request to sign a message is received, the user has to use its biome
 
 > [!IMPORTANT]  
 > When initializing a Safe Account with a Passkey signer it will use the Safe WebAuthn Shared Signer to respect 4337 limitation. For more information have a look at [Safe Documentation](https://github.com/safe-global/safe-modules/tree/main/modules/passkey/contracts/4337#safe-webauthn-shared-signer)
+
+##### Safe WebAuthn Shared Signer
+
+There is one notable caveat when using the passkey module with ERC-4337 specifically, which is that ERC-4337 user operations can only deploy exactly one CREATE2 contract whose address matches the sender of the user operation. This means that deploying both the Safe account and its WebAuthn credential owner in a user operation's initCode is not possible.
+
+In order to by pass this limitation you can use the SafeWebAuthnSharedSigner: a singleton that can be used as a Safe owner.
+
+For more Infos : [Safe passkey module](https://github.com/safe-global/safe-modules/blob/main/modules/passkey/contracts/4337/README.md#overview)
+
+```swift
+import swift4337
+let domain = "sample4337.cometh.io"
+
+let signer = try await SafePasskeySigner(domain:domain, name:"UserName")
+let smartAccount = try await SafeAccount(signer: signer, rpc: rpc, bundler: bundler)
+
+```
+
+This will init a safe with a Passkey Signer using the Safe WebAuthn Shared Signer contract as owner.
+When deploying the safe, the Safe WebAuthn Shared Signer will be configured with the x and y of the passkey used.
+
+##### Safe WebAuthn Signer
+
+> [!IMPORTANT]  
+> This configuration of Passkey signer should not be used for an undeployed safe, or the signer contract should have already been deployed. Due to 4337 limitations, only one CREATE2 contract should be deployed by the init code. Safe and signer cannot be deployed simultaneously.
+
+```swift
+import swift4337
+let domain = "sample4337.cometh.io"
+
+let keyStorage = EthereumKeyLocalStorage()
+let signer = try EthereumAccount.create(replacing: keyStorage, keystorePassword: "MY_PASSWORD")
+var smartAccount = try await SafeAccount(signer: signer, rpc: rpc, bundler: bundler)
+let smartAccountAddress = smartAccount.address
+
+// This will create the passkey and initialize the signer with the address calculated by the factory
+let signerPasskey = try await SafePasskeySigner(domain: domain, name: "Nouveau Signer 2", isSharedWebauthnSigner: false, rpc: rpc)
+
+// This will deploy the Safe Webauthn Contract and add its address as the owner of the safe
+let userOpHash = try await smartAccount.deployAndEnablePasskeySigner(x: signerPasskey.publicX, y: signerPasskey.publicY)
+
+// Now you can use the passkey signer with the safe. Specify the address of the smart account to use the same instance. Otherwise, it will calculate a new safe address based on the signer address
+smartAccount = try await SafeAccount(address: smartAccountAddress, signer: signer, rpc: rpc, bundler: bundler)
+```
 
 #### EOA Signer
 

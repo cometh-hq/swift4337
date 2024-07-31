@@ -15,6 +15,8 @@ import BigInt
 
 public enum PasskeySignerError: Error, Equatable {
     case errorNotImplemented
+    case errorGetSignerAddress
+    case errorMissingRPCCLient
 }
 
 public class SafePasskeySigner:NSObject, PasskeySignerProtocol {
@@ -23,7 +25,8 @@ public class SafePasskeySigner:NSObject, PasskeySignerProtocol {
     
     public let domain: String
     public let name: String
-    public let address: EthereumAddress;
+    public var address: EthereumAddress;
+    
    
     public var authorizationDelegate: AuthorizationDelegate = AuthorizationDelegate()
     
@@ -35,19 +38,36 @@ public class SafePasskeySigner:NSObject, PasskeySignerProtocol {
         super.init()
     }
     
-    public init(domain: String, name: String, address: EthereumAddress = EthereumAddress(SafeConfig.entryPointV7().safeWebAuthnSharedSignerAddress)) async throws{
+    public init(domain: String, name: String,  isSharedWebauthnSigner:Bool = true, safeConfig: SafeConfig = SafeConfig.entryPointV7(), rpc: EthereumRPCProtocol? = nil) async throws{
         self.domain = domain
         self.name = name
-        self.address = address
+        self.address = EthereumAddress.zero
+        
         self.publicKey = PublicKey(x: "", y: "")
         super.init()
        
-        guard let publicKey = try self.getPublicKeyFromUserPref() else {
+        if let publicKey = try self.getPublicKeyFromUserPref()  {
+            self.publicKey = publicKey
+        } else {
             self.publicKey = try await self.createPasskey(domain: domain, name: name)
-            return
         }
         
-        self.publicKey = publicKey
+        if (isSharedWebauthnSigner == true) {
+            self.address = EthereumAddress(safeConfig.safeWebAuthnSharedSignerAddress)
+        } else {
+            let verifiers = EthereumAddress(safeConfig.safeP256VerifierAddress).asNumber()!
+          
+            guard let rpcClient = rpc else {
+                Logger.defaultLogger.error("Error no RPC Provided ")
+                throw PasskeySignerError.errorMissingRPCCLient
+            }
+            
+            let functionGetSigner =  GetSignerFunction(contract:  EthereumAddress(safeConfig.safeWebauthnSignerFactory), x: self.publicX, y: self.publicY, verifiers: verifiers)
+          
+            
+            self.address = try await functionGetSigner.call(withClient:rpcClient , responseType: GetSignerResponse.self).value
+            
+        }
     }
     
     public func formatSignature (_ signature: Data) -> String {

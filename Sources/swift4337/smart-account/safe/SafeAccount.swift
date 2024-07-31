@@ -11,6 +11,8 @@ import os
 
 
 public struct SafeAccount: SmartAccountProtocol  {
+
+    
     public let address: EthereumAddress
     public let safeConfig: SafeConfig
     public let signer: SignerProtocol
@@ -51,9 +53,9 @@ public struct SafeAccount: SmartAccountProtocol  {
     }
     
 
-    public func getCallData(to: EthereumAddress, value:BigUInt, data:Data) throws -> Data{
+    public func getCallData(to: EthereumAddress, value:BigUInt, data:Data, delegateCall: Bool) throws -> Data{
         let encoder = ExecuteUserOpFunction(contract: self.address, to: to,
-                       value: value, calldata:data , operation: 0)
+                                            value: value, calldata:data , operation: delegateCall ? 1 : 0 )
          
         let encodedTxCall = try encoder.transaction()
         
@@ -115,6 +117,44 @@ public struct SafeAccount: SmartAccountProtocol  {
         return createProxyWithNonceData
     }
     
+    public func addOwner(address: EthereumAddress) async throws -> String {
+        guard let addOwnerData = try AddOwnerWithThresholdFunction(contract: self.address, owner: address, _threshold: BigUInt(1)).transaction().data else {
+            throw  SmartAccountError.errorGeneratingCallDate
+        }
+        
+        let userOperationHash = try await self.sendUserOperation(to: self.address, data: addOwnerData)
+        return userOperationHash
+    }
+    
+    public func deployAndEnablePasskeySigner(x:BigUInt, y:BigUInt) async throws -> String {
+        let verifiers = EthereumAddress(self.safeConfig.safeP256VerifierAddress).asNumber()!
+        let functionGetSigner =  GetSignerFunction(contract:  EthereumAddress(safeConfig.safeWebauthnSignerFactory), x: x, y: y, verifiers: verifiers)
+        let signerAddress = try await functionGetSigner.call(withClient:self.rpc , responseType: GetSignerResponse.self).value
+        
+        let safeWebauthnSignerFactory = EthereumAddress(self.safeConfig.safeWebauthnSignerFactory)
+        
+        guard let createSignerData = try CreateSignerFunction(contract:safeWebauthnSignerFactory , x: x, y: y, verifiers: verifiers).transaction().data else {
+            throw  SmartAccountError.errorGeneratingCallDate
+        }
+        
+        guard let addOwnerData = try AddOwnerWithThresholdFunction(contract: self.address, owner: signerAddress, _threshold: BigUInt(1)).transaction().data else {
+            throw  SmartAccountError.errorGeneratingCallDate
+        }
+        
+        let pakedMultiSend = try [MultiSendTransaction(op: BigUInt(0), to: safeWebauthnSignerFactory, data: createSignerData), MultiSendTransaction(op: BigUInt(0), to:  self.address, data: addOwnerData)].pack()
+        
+        
+        guard let multiSendData = try MultiSendFunction(contract: EthereumAddress(safeConfig.safeMultiSendAddress), transactions: pakedMultiSend).transaction().data else {
+            throw SmartAccountError.errorGeneratingCallDate
+        }
+        
+        let safeMultiSendAddress = EthereumAddress(safeConfig.safeMultiSendAddress)
+        
+        let userOperationHash = try await self.sendUserOperation(to: safeMultiSendAddress, data: multiSendData, delegateCall: true)
+        
+        return userOperationHash
+    }
+    
 
     
     public static func predictAddress(signer: SignerProtocol, rpc: EthereumRPCProtocol, safeConfig: SafeConfig) async throws -> EthereumAddress {
@@ -138,5 +178,8 @@ public struct SafeAccount: SmartAccountProtocol  {
         let predictedAddress = try Create2.getCreate2Address(from: safeConfig.proxyFactory, salt: saltNonce.bytes, initCodeHash: keccack256DeploymentCode.bytes)
         return EthereumAddress(predictedAddress)
     }
+    
+    
+
  
 }
