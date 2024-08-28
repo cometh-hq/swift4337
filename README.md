@@ -200,7 +200,7 @@ var smartAccount = try await SafeAccount(signer: signer, rpc: rpc, bundler: bund
 let smartAccountAddress = smartAccount.address
 
 // This will create the passkey and initialize the signer with the address calculated by the factory
-let signerPasskey = try await SafePasskeySigner(domain: domain, name: "Nouveau Signer 2", isSharedWebauthnSigner: false, rpc: rpc)
+let signerPasskey = try await SafePasskeySigner(domain: domain, name: New", isSharedWebauthnSigner: false, rpc: rpc)
 
 // This will deploy the Safe Webauthn Contract and add its address as the owner of the safe
 let userOpHash = try await smartAccount.deployAndEnablePasskeySigner(x: signerPasskey.publicX, y: signerPasskey.publicY)
