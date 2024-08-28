@@ -206,7 +206,7 @@ let signerPasskey = try await SafePasskeySigner(domain: domain, name: "New", isS
 let userOpHash = try await smartAccount.deployAndEnablePasskeySigner(x: signerPasskey.publicX, y: signerPasskey.publicY)
 
 // Now you can use the passkey signer with the safe. Specify the address of the smart account to use the same instance. Otherwise, it will calculate a new safe address based on the signer address
-smartAccount = try await SafeAccount(address: smartAccountAddress, signer: signer, rpc: rpc, bundler: bundler)
+smartAccount = try await SafeAccount(address: smartAccountAddress, signer: signerPasskey, rpc: rpc, bundler: bundler)
 ```
 
 #### EOA Signer
