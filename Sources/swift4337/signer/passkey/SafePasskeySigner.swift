@@ -93,7 +93,7 @@ public class SafePasskeySigner:NSObject, PasskeySignerProtocol {
         let validUntilEncoded =  try ABIEncoder.encode(BigUInt(0), uintSize: 48)
         let validAfterEncoded =  try ABIEncoder.encode(BigUInt(0), uintSize: 48)
         
-        let signaturePacked =  [validUntilEncoded.bytes, validAfterEncoded.bytes,  signature.web3.hexData!.bytes].flatMap { $0 }
+      let signaturePacked =  [validUntilEncoded.bytes, validAfterEncoded.bytes,  signature.web3.hexData!.web3.bytes].flatMap { $0 }
         return signaturePacked.hexString
     }
     

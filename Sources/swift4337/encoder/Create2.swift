@@ -14,8 +14,8 @@ public struct Create2  {
 
     static public func getCreate2Address(from: String, salt: [UInt8], initCodeHash: [UInt8]) throws -> String {
         let fromEncoded = try ABIEncoder.encode(EthereumAddress(from), packed: true)
-        let concatened = ["0xff".web3.hexData!.bytes, fromEncoded.bytes, salt, initCodeHash].flatMap { $0 }
-        let ethAddress = EthereumAddress(concatened.keccak256.bytes.slice(12).hexString)
+      let concatened = ["0xff".web3.hexData!.web3.bytes, fromEncoded.bytes, salt, initCodeHash].flatMap { $0 }
+      let ethAddress = EthereumAddress(concatened.keccak256.web3.bytes.slice(12).hexString)
         return ethAddress.toChecksumAddress()
     }
     
