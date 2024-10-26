@@ -21,7 +21,7 @@ public struct SafeConfig {
     public var safeWebauthnSignerFactory: String
     public var creationNonce = BigUInt(0)
     
-    init(safeSingletonL2: String,
+    public init(safeSingletonL2: String,
                 proxyFactory: String,
                 ERC4337ModuleAddress: String,
                 safeModuleSetupAddress: String,
