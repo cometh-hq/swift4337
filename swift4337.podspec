@@ -9,7 +9,7 @@ Pod::Spec.new do |s|
   s.module_name = 'swift4337'
 
   s.swift_version = '5.10'
-  s.ios.deployment_target = '13.0'
+  s.ios.deployment_target = '15.6'
 
   s.source_files = 'Sources/swift4337/**/*.swift'
 
