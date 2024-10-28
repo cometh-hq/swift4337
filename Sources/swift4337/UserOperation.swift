@@ -76,7 +76,7 @@ public struct UserOperation: Encodable, Decodable {
         }
         
         let factoryAddress = EthereumAddress(self.factory!)
-        let initCode = [factoryAddress.asData()!.bytes, factoryData!.web3.hexData!.bytes].flatMap { $0 }
+      let initCode = [factoryAddress.asData()!.web3.bytes, factoryData!.web3.hexData!.web3.bytes].flatMap { $0 }
         return initCode.hexString
     }
     
@@ -100,10 +100,10 @@ public struct UserOperation: Encodable, Decodable {
         let verificationGasLimitEncoded =  try ABIEncoder.encode(verificationGasLimit!, uintSize: 128)
         let postOpGasLimitEncoded =  try ABIEncoder.encode(BigUInt(postOpGasLimit!), uintSize: 128)
         
-        let paymasterAndData = [EthereumAddress(self.paymaster!).asData()!.bytes,
-                                verificationGasLimitEncoded.bytes, 
+      let paymasterAndData = [EthereumAddress(self.paymaster!).asData()!.web3.bytes,
+                                verificationGasLimitEncoded.bytes,
                                 postOpGasLimitEncoded.bytes,
-                                self.paymasterData!.web3.hexData!.bytes
+                              self.paymasterData!.web3.hexData!.web3.bytes
                                 
         ].flatMap { $0 }
         

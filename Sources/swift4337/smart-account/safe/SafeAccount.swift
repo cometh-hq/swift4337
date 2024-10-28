@@ -86,7 +86,7 @@ public struct SafeAccount: SmartAccountProtocol  {
         let validUntilEncoded =  try ABIEncoder.encode(validUntil, uintSize: 48)
         let validAfterEncoded =  try ABIEncoder.encode(validAfter, uintSize: 48)
         
-        let signaturePacked =  [validUntilEncoded.bytes, validAfterEncoded.bytes,  signed.web3.hexData!.bytes].flatMap { $0 }
+      let signaturePacked =  [validUntilEncoded.bytes, validAfterEncoded.bytes,  signed.web3.hexData!.web3.bytes].flatMap { $0 }
         return Data(signaturePacked)
     }
     
@@ -166,16 +166,13 @@ public struct SafeAccount: SmartAccountProtocol  {
         let setupCallData = try SignerUtils.setupCallData(signer: signer, safeConfig: safeConfig)
         
         let safeSingletonL2Encoded = try ABIEncoder.encode(EthereumAddress(safeConfig.safeSingletonL2))
-        let deploymentCode = [proxyCreationCode.bytes, safeSingletonL2Encoded.bytes].flatMap { $0 }
+        let deploymentCode = [proxyCreationCode.web3.bytes, safeSingletonL2Encoded.bytes].flatMap { $0 }
 
-        let keccack256Setup = setupCallData.bytes.keccak256
+        let keccack256Setup = setupCallData.web3.bytes.keccak256
         let nonceEncoded = try ABIEncoder.encode(nonce)
-        
-        let saltNonce = [keccack256Setup.bytes, nonceEncoded.bytes].flatMap { $0 }.keccak256
-        
-        let keccack256DeploymentCode = deploymentCode.bytes.keccak256
-        
-        let predictedAddress = try Create2.getCreate2Address(from: safeConfig.proxyFactory, salt: saltNonce.bytes, initCodeHash: keccack256DeploymentCode.bytes)
+        let saltNonce = [keccack256Setup.web3.bytes, nonceEncoded.bytes].flatMap { $0 }.keccak256
+        let keccack256DeploymentCode = deploymentCode.keccak256
+        let predictedAddress = try Create2.getCreate2Address(from: safeConfig.proxyFactory, salt: saltNonce.web3.bytes, initCodeHash: keccack256DeploymentCode.web3.bytes)
         return EthereumAddress(predictedAddress)
     }
     

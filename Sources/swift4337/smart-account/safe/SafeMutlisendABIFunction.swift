@@ -26,9 +26,9 @@ public struct MultiSendTransaction  {
     public func pack() throws-> Data {
         let opEncoded =  try ABIEncoder.encode(self.op, uintSize: 8)
         let valueEncoded =  try ABIEncoder.encode(self.value)
-        let dataSizeEncoded = try ABIEncoder.encode(BigUInt(self.data.bytes.count))
+      let dataSizeEncoded = try ABIEncoder.encode(BigUInt(self.data.web3.bytes.count))
         
-        return Data([opEncoded.bytes, self.to.asData()!.bytes, valueEncoded.bytes,  dataSizeEncoded.bytes, self.data.bytes].flatMap { $0 })
+      return Data([opEncoded.bytes, self.to.asData()!.web3.bytes, valueEncoded.bytes,  dataSizeEncoded.bytes, self.data.web3.bytes].flatMap { $0 })
         
     }
 }
