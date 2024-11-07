@@ -11,7 +11,7 @@ import BigInt
 import os
 
 public enum SmartAccountError: Error, Equatable {
-    case errorGeneratingCallDate
+    case errorGeneratingCallData
     case errorPredictingAddress
     case errorGettingInitCode
     case errorAccountNotDeployed
