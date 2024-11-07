@@ -38,7 +38,8 @@ public class AuthorizationDelegate:NSObject, ASAuthorizationControllerDelegate {
 
      public func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: any Error) {
          Logger.defaultLogger.error("AuthorizationController error: \(error)")
-         signInContinuation?.resume(throwing: EthereumAccountError.signError)
+         signInContinuation?.resume(throwing: error)
+         signUpContinuation?.resume(throwing: error)
      }
     
 }
