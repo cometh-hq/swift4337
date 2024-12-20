@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name = 'swift4337'
-  s.version = '0.4.1'
+  s.version = '0.4.2'
   s.license = 'MIT'
   s.summary = 'swift4337'
   s.homepage = 'https://github.com/a-thomas/swift4337'
