@@ -127,7 +127,6 @@ struct GetOwnersFunction: ABIFunction {
            self.from = from
            self.gasPrice = gasPrice
            self.gasLimit = gasLimit
-
        }
 
        public func encode(to encoder: ABIFunctionEncoder) throws {
@@ -181,6 +180,49 @@ struct AddOwnerWithThresholdFunction: ABIFunction {
             try encoder.encode(_threshold)
         }
    }
+
+// function isValidSignature(bytes _message, bytes calldata _signature)
+struct IsValidSignatureFunction: ABIFunction {
+    public static let name = "isValidSignature"
+    public var contract: EthereumAddress
+    public let gasPrice: BigUInt? = nil
+    public let gasLimit: BigUInt? = nil
+    public let from: EthereumAddress? = nil
+    
+    public let message: Data
+    public let signature: Data
+    
+    
+    public init(
+        contract: EthereumAddress,
+        message: Data,
+        signature: Data
+    ) {
+        self.contract = contract
+        self.message = message
+        self.signature = signature
+    }
+    
+    public func encode(to encoder: ABIFunctionEncoder) throws {
+        try encoder.encode(message)
+        try encoder.encode(signature)
+    }
+}
+
+public struct IsValidSignatureResponse: ABIResponse {
+    static let MAGICVALUE = Data(hex: "0x20c13b0b")
+    public static var types: [ABIType.Type] = [Data4.self]
+    
+    public let isValid: Bool
+    
+    public init?(values: [ABIDecoder.DecodedValue]) throws {
+        let decoded = try values[0].decoded() as Data
+        self.isValid = decoded == Self.MAGICVALUE
+    }
+    
+}
+
+
 
 
 

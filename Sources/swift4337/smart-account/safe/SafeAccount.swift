@@ -11,7 +11,7 @@ import os
 
 
 public struct SafeAccount: SmartAccountProtocol  {
-
+    
     
     public let address: EthereumAddress
     public let safeConfig: SafeConfig
@@ -77,21 +77,22 @@ public struct SafeAccount: SmartAccountProtocol  {
                                             validAfter: validAfter, 
                                             entryPointAddress:entryPointAddress)
        
-        
-        
-        let decoder = JSONDecoder()
-        let typedData = try decoder.decode(TypedData.self, from: data)
+        let typedData = try self.hashTypeData(data)
         let signed = try await self.signer.signMessage(message: typedData)
         
         let validUntilEncoded =  try ABIEncoder.encode(validUntil, uintSize: 48)
         let validAfterEncoded =  try ABIEncoder.encode(validAfter, uintSize: 48)
         
-      let signaturePacked =  [validUntilEncoded.bytes, validAfterEncoded.bytes,  signed.web3.hexData!.web3.bytes].flatMap { $0 }
+        let signaturePacked =  [validUntilEncoded.bytes, validAfterEncoded.bytes,  ].flatMap { $0 }
         return Data(signaturePacked)
     }
     
+    private func hashTypeData(_ data: Data) throws -> TypedData {
+        let decoder = JSONDecoder()
+        return try decoder.decode(TypedData.self, from: data)
+    }
+    
     public func getOwners() async throws -> [EthereumAddress] {
-        
         guard try await self.isDeployed() else {
             throw SmartAccountError.errorAccountNotDeployed
         }
@@ -193,7 +194,19 @@ public struct SafeAccount: SmartAccountProtocol  {
         return EthereumAddress(predictedAddress)
     }
     
+    public func signMessage(_ message: Data) async throws -> Data? {
+        let domain =  EIP712Domain(chainId: self.chainId, verifyingContract: self.address.toChecksumAddress())
+        let data = try SafeMessage.eip712Data(domain: domain, message: message)
+       
+        let typedData = try self.hashTypeData(data)
+        let signed = try await self.signer.signMessage(message: typedData)
+        return signed.web3.hexData
+    }
     
-
+    public func isValidSignature(_ message: Data, signature: Data) async throws -> Bool {
+        let function = try IsValidSignatureFunction(contract: self.address, message: message, signature: signature)
+        let response = try await function.call(withClient: self.rpc, responseType: IsValidSignatureResponse.self)
+        return response.isValid
+    }
  
 }

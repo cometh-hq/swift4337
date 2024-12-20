@@ -55,9 +55,11 @@ public protocol SmartAccountProtocol {
     func signUserOperation(_ userOperation: UserOperation) async throws -> Data
     func deployAndEnablePasskeySigner(x:BigUInt, y:BigUInt) async throws -> String 
     func addOwner(address: EthereumAddress) async throws -> String
+    func signMessage(_ message: Data) async throws -> Data?
+    func isValidSignature(_ message: Data, signature: Data) async throws -> Bool
 }
 
-extension SmartAccountProtocol{
+extension SmartAccountProtocol {
     
     public func getNonce(key: BigUInt = BigUInt(0)) async throws -> BigUInt {
         let entryPoint = EntryPoint(client: self.rpc, address: self.entryPointAddress)
