@@ -30,8 +30,7 @@ class SafeAccountTests: XCTestCase {
     func testInitWalletWithoutAddressPredictAddressIsOk() async throws {
         self.safeAccount = try await SafeAccount(signer: account, rpc: rpc, bundler: bundler)
         let expectedAddress = EthereumAddress("0xcfe1e7242dF565f031e1D3F645169Dda9D1230d2")
-        
-         XCTAssertEqual(safeAccount.address.toChecksumAddress(), expectedAddress.toChecksumAddress())
+        XCTAssertEqual(safeAccount.address.toChecksumAddress(), expectedAddress.toChecksumAddress())
     }
     
     
@@ -124,5 +123,13 @@ class SafeAccountTests: XCTestCase {
         self.safeAccount = try await SafeAccount(signer: account, rpc: rpc, bundler: bundler, gasEstimator: gasEstimator)
        
         XCTAssertEqual(safeAccount.gasEstimator.minBaseFee, BigUInt(50000000))
+    }
+    
+    func testSignMessage() async throws {
+        let account = try! EthereumAccount.init(keyStorage: TestEthereumKeyStorage(privateKey: "0x4bddaeef5fb283e847abf0bd480a771b7695d70f413b248dc56c0bb1bb4a0b86")).toSigner()
+        self.safeAccount = try await SafeAccount(signer: account, rpc: rpc, bundler: bundler)
+        let signatureData = try await self.safeAccount.signMessage("0xaaaa".web3.hexData!)
+        let expected = "0x496d9eb4a63e929644c4b2812cb589b6c0f71f234e3799ba05893e8907f4367f40648de25b570a46559aa07927efa67a04e665652a19685121e870038003b30c1c"
+        XCTAssertEqual(signatureData!.web3.hexString, expected)
     }
 }
