@@ -8,4 +8,9 @@
 public struct PublicKey:Codable {
     var x: String
     var y: String
+    
+    public init(x: String, y: String) {
+        self.x = x
+        self.y = y
+    }
 }

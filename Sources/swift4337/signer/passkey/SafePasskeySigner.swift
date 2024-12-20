@@ -38,7 +38,7 @@ public class SafePasskeySigner:NSObject, PasskeySignerProtocol {
         super.init()
     }
     
-    public init(domain: String, name: String,  isSharedWebauthnSigner:Bool = true, safeConfig: SafeConfig = SafeConfig.entryPointV7(), rpc: EthereumRPCProtocol? = nil) async throws{
+    public init(publicKey: PublicKey? = nil, domain: String, name: String, isSharedWebauthnSigner:Bool = true, safeConfig: SafeConfig = SafeConfig.entryPointV7(), rpc: EthereumRPCProtocol? = nil) async throws{
         self.domain = domain
         self.name = name
         self.address = EthereumAddress.zero
@@ -46,10 +46,14 @@ public class SafePasskeySigner:NSObject, PasskeySignerProtocol {
         self.publicKey = PublicKey(x: "", y: "")
         super.init()
        
-        if let publicKey = try self.getPublicKeyFromUserPref()  {
-            self.publicKey = publicKey
+        if publicKey != nil {
+            self.publicKey = publicKey!
         } else {
-            self.publicKey = try await self.createPasskey(domain: domain, name: name)
+            if let publicKey = try self.getPublicKeyFromUserPref()  {
+                self.publicKey = publicKey
+            } else {
+                self.publicKey = try await self.createPasskey(domain: domain, name: name)
+            }
         }
         
         if (isSharedWebauthnSigner == true) {
