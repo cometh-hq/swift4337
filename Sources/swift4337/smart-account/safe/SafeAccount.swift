@@ -83,7 +83,7 @@ public struct SafeAccount: SmartAccountProtocol  {
         let validUntilEncoded =  try ABIEncoder.encode(validUntil, uintSize: 48)
         let validAfterEncoded =  try ABIEncoder.encode(validAfter, uintSize: 48)
         
-        let signaturePacked =  [validUntilEncoded.bytes, validAfterEncoded.bytes,  ].flatMap { $0 }
+        let signaturePacked =  [validUntilEncoded.bytes, validAfterEncoded.bytes, signed.web3.hexData!.web3.bytes].flatMap { $0 }
         return Data(signaturePacked)
     }
     
