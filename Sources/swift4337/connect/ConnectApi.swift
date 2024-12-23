@@ -6,12 +6,14 @@ public enum APIError: Error {
 }
 
 public struct DeviceData: Encodable {
-    let deviceName: String?
-    let osVersion: String?
-    
-    public init(deviceName: String? = nil, osVersion: String? = nil) {
-        self.deviceName = deviceName
-        self.osVersion = osVersion
+    let browser: String?
+    let os: String?
+    let platform: String?
+
+    public init(browser: String? = nil, os: String? = nil, platform: String? = nil) {
+        self.browser = browser
+        self.os = os
+        self.platform = platform
     }
 }
 
