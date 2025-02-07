@@ -9,6 +9,14 @@ import web3
 import BigInt
 import os
 
+// safe account error
+enum SafeAccountError: Error {
+    case errorCannotDeployRecoveryModule
+    case errorRecoveryModuleAlreadyDeployed
+    case errorRecoveryModuleNotDeployed
+    case errorRecoveryNotStarted
+}
+
 
 public struct SafeAccount: SmartAccountProtocol  {
     
@@ -208,5 +216,60 @@ public struct SafeAccount: SmartAccountProtocol  {
         let response = try await function.call(withClient: self.rpc, responseType: IsValidSignatureResponse.self)
         return response.isValid
     }
- 
+    
+    // Recovery Module
+    public func predictRecoveryModuleAddress(config: RecoveryModuleConfig) throws -> EthereumAddress? {
+        return try DelayModuleUtils.predictAddress(safeAddress: self.address, config: config)
+    }
+
+    public func enableRecoveryModule(guardianAddress: EthereumAddress, config: RecoveryModuleConfig) async throws -> String {
+        let delayAddress = try self.predictRecoveryModuleAddress(config: config)
+        guard let delayAddress else {
+            throw SafeAccountError.errorCannotDeployRecoveryModule
+        }
+        let isDeployed = try await self.rpc.eth_getCode(address: delayAddress) != "0x"
+        if isDeployed {
+            throw SafeAccountError.errorRecoveryModuleAlreadyDeployed
+        }
+
+        let initializer = try DelayModuleUtils.getSetUpFunctionData(safeAddress: self.address, recoveryModuleConfig: config)
+
+        let saltNonce = BigUInt(self.address.toChecksumAddress().web3.hexData!)
+        let deployModuleCallData = try DeployModuleFunction.callData(masterCopy: EthereumAddress(config.delayModuleAddress), initializer: initializer, saltNonce: saltNonce)
+        let txs: [TransactionParams] = [
+            TransactionParams(to: EthereumAddress(config.moduleFactoryAddress), value: BigUInt(0), data: deployModuleCallData),
+            TransactionParams(to: self.address, value: BigUInt(0), data: try EnableModuleFunction.callData(moduleAddress: delayAddress)),
+            TransactionParams(to: delayAddress, value: BigUInt(0), data: try EnableModuleFunction.callData(moduleAddress: guardianAddress)),
+        ]
+        let userOperationHash = try await self.sendUserOperation(txs)
+        return userOperationHash
+    }
+    
+    public func getCurrentGuardian(delayAddress: EthereumAddress) async throws -> EthereumAddress? {
+        let SENTINEL_MODULES = "0x0000000000000000000000000000000000000001"
+        let function = GetModulesPaginatedFunction(contract: delayAddress, start: EthereumAddress(SENTINEL_MODULES), pageSize: BigUInt(1000))
+        let response = try await function.call(withClient: self.rpc, responseType: GetModulesPaginatedResponse.self)
+        return response.array.first
+    }
+
+    public func isRecoveryStarted(delayAddress: EthereumAddress) async throws -> Bool {
+        let txNonce = try await TxNonceFunction(contract: delayAddress).call(withClient: self.rpc, responseType: TxNonceResponse.self)
+        let queueNonce = try await QueueNonceFunction(contract: delayAddress).call(withClient: self.rpc, responseType: QueueNonceResponse.self)
+        return queueNonce.value > txNonce.value
+    }
+
+    public func cancelRecovery(delayAddress: EthereumAddress) async throws -> String {
+        let isDeployed = try await self.rpc.eth_getCode(address: delayAddress ) != "0x"
+        if !isDeployed {
+            throw SafeAccountError.errorRecoveryModuleNotDeployed
+        }
+        if try await !self.isRecoveryStarted(delayAddress: delayAddress) {
+            throw SafeAccountError.errorRecoveryNotStarted
+        }
+        let txNonce = try await TxNonceFunction(contract: delayAddress).call(withClient: self.rpc, responseType: TxNonceResponse.self)
+        let newNonce = txNonce.value + 1
+        let setTxNonceCallData = try SetTxNonceFunction.callData(nonce: newNonce)
+        return try await self.sendUserOperation(to: delayAddress, data: setTxNonceCallData)
+    }
+    
 }

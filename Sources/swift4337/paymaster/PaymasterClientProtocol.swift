@@ -67,7 +67,7 @@ public extension PaymasterClientProtocol{
                 throw EthereumClientError.unexpectedReturnValue
             }
         } catch {
-            Logger.defaultLogger.error("pm_sponsorUserOperation error")
+            Logger.defaultLogger.error("pm_supportedEntryPoints error")
             throw failureHandler(error)
         }
     }
