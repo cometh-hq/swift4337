@@ -277,7 +277,7 @@ Available methods:
 
 #### Enable Recovery Module
 
-Swift4337 provides a high-level API to enable the recovery module for a Safe Account.
+Swift4337 provides a way to enable a recovery module for a Safe Account. In our implementation, we use [Delay Module](https://github.com/gnosisguild/zodiac-modifier-delay) as recovery module.
 
 Here is the API we provide:
 
@@ -306,7 +306,6 @@ Here are the default values used for the recovery module, use `RecoveryModuleCon
       )
   }
 ```
-
 
 ## Dependencies
 
