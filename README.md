@@ -272,6 +272,42 @@ Available methods:
 
 - **pm_supportedEntryPoints**: eturns an array of supported EntryPoint addresses.
 
+
+### Recovery module
+
+#### Enable Recovery Module
+
+Swift4337 provides a high-level API to enable the recovery module for a Safe Account.
+
+Here is the API we provide:
+
+```swift
+func enableRecoveryModule(guardianAddress: EthereumAddress, recoveryModuleConfig: RecoveryModuleConfig = RecoveryModuleConfig()): String
+func getCurrentGuardian(delayAddress: EthereumAddress): EthereumAddress?
+func isRecoveryStarted(delayAddress: EthereumAddress): Bool
+func cancelRecovery(delayAddress: EthereumAddress): String
+```
+
+- **enableRecoveryModule**: Enables the recovery module for the safe account by passing the guardian address and the recovery module configuration.
+- **getCurrentGuardian**: Returns the current guardian address (if any) for the delay module.
+- **isRecoveryStarted**: Returns true if the recovery process has started.
+- **cancelRecovery**: Cancels the recovery process (if any).
+
+`RecoveryModuleConfig` describes the configuration used for the recovery module, we provides default values:
+
+Here are the default values used for the recovery module, use `RecoveryModuleConfig.defaultConfig()` to get the default values.
+
+```swift
+  public static func defaultConfig() -> RecoveryModuleConfig{
+      return RecoveryModuleConfig(moduleFactoryAddress: "0x000000000000aDdB49795b0f9bA5BC298cDda236",
+                                  delayModuleAddress: "0xd54895B1121A2eE3f37b502F507631FA1331BED6",
+                                  recoveryCooldown: 86400,
+                                  recoveryExpiration: 604800
+      )
+  }
+```
+
+
 ## Dependencies
 
 Swift4337 is built on top of [web3.swift](https://github.com/argentlabs/web3.swift).

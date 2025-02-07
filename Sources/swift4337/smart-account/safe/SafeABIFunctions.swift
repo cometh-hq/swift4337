@@ -222,6 +222,16 @@ public struct IsValidSignatureResponse: ABIResponse {
     
 }
 
+public struct EnableModuleFunction {
+    public static func callData(
+        moduleAddress: EthereumAddress
+    ) throws -> Data {
+        let encoder = ABIFunctionEncoder("enableModule")
+        try encoder.encode(moduleAddress)
+        return try encoder.encoded()
+    }
+}
+
 
 
 
