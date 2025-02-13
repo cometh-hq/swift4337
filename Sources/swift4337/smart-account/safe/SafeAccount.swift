@@ -19,6 +19,8 @@ enum SafeAccountError: Error {
 
 
 public struct SafeAccount: SmartAccountProtocol  {
+
+    
     
     
     public let address: EthereumAddress
@@ -212,7 +214,7 @@ public struct SafeAccount: SmartAccountProtocol  {
     }
     
     public func isValidSignature(_ message: Data, signature: Data) async throws -> Bool {
-        let function = try IsValidSignatureFunction(contract: self.address, message: message, signature: signature)
+        let function = IsValidSignatureFunction(contract: self.address, message: message, signature: signature)
         let response = try await function.call(withClient: self.rpc, responseType: IsValidSignatureResponse.self)
         return response.isValid
     }
@@ -222,7 +224,7 @@ public struct SafeAccount: SmartAccountProtocol  {
         return try DelayModuleUtils.predictAddress(safeAddress: self.address, config: config)
     }
 
-    public func enableRecoveryModule(guardianAddress: EthereumAddress, config: RecoveryModuleConfig) async throws -> String {
+    public func enableRecovery(guardianAddress: EthereumAddress, config: RecoveryModuleConfig) async throws -> String {
         let delayAddress = try self.predictRecoveryModuleAddress(config: config)
         guard let delayAddress else {
             throw SafeAccountError.errorCannotDeployRecoveryModule

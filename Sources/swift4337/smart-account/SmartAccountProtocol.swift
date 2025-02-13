@@ -57,6 +57,12 @@ public protocol SmartAccountProtocol {
     func addOwner(address: EthereumAddress) async throws -> String
     func signMessage(_ message: Data) async throws -> Data?
     func isValidSignature(_ message: Data, signature: Data) async throws -> Bool
+
+    // Recovery module
+    func enableRecovery(guardianAddress: EthereumAddress, config: RecoveryModuleConfig) async throws -> String
+    func getCurrentGuardian(delayAddress: EthereumAddress) async throws -> EthereumAddress?
+    func isRecoveryStarted(delayAddress: EthereumAddress) async throws -> Bool
+    func cancelRecovery(delayAddress: EthereumAddress) async throws -> String
 }
 
 extension SmartAccountProtocol {

@@ -282,13 +282,13 @@ Swift4337 provides a way to enable a recovery module for a Safe Account. In our 
 Here is the API we provide:
 
 ```swift
-func enableRecoveryModule(guardianAddress: EthereumAddress, recoveryModuleConfig: RecoveryModuleConfig = RecoveryModuleConfig()): String
+func enableRecovery(guardianAddress: EthereumAddress, recoveryModuleConfig: RecoveryModuleConfig = RecoveryModuleConfig()): String
 func getCurrentGuardian(delayAddress: EthereumAddress): EthereumAddress?
 func isRecoveryStarted(delayAddress: EthereumAddress): Bool
 func cancelRecovery(delayAddress: EthereumAddress): String
 ```
 
-- **enableRecoveryModule**: Enables the recovery module for the safe account by passing the guardian address and the recovery module configuration.
+- **enableRecovery**: Enables the recovery module for the safe account by passing the guardian address and the recovery module configuration.
 - **getCurrentGuardian**: Returns the current guardian address (if any) for the delay module.
 - **isRecoveryStarted**: Returns true if the recovery process has started.
 - **cancelRecovery**: Cancels the recovery process (if any).
