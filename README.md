@@ -307,6 +307,44 @@ Here are the default values used for the recovery module, use `RecoveryModuleCon
   }
 ```
 
+### Connect API
+
+Swift4337 provides seamless integration of the Connect API for 4337.
+Here are the features we provide:
+
+```swift
+let connectApi = ConnectApi(apiKey: "YOUR_API_KEY")
+connectApi.initWallet(
+  chainId: chainId, walletAddress: walletAddress, initiatorAddress: initiatorAddress,
+  publicKeyId: publicKeyId, publicKeyX: publicKeyX, publicKeyY: publicKeyY,
+  deviceData: deviceData
+) { result in 
+  // ...
+}
+api.getPasskeySignersByWalletAddress(walletAddress: walletAddress) { result in
+  // ...
+}
+api.createWebAuthnSigner(
+  chainId: chainId, walletAddress: walletAddress,
+  publicKeyId: publicKeyId, publicKeyX: publicKeyX, publicKeyY: publicKeyY,
+  deviceData: deviceData, signerAddress: signerAddress, isSharedWebAuthnSigner: isSharedWebAuthnSigner
+) { result in
+  // ...
+}
+api.isValidSignature(
+  walletAddress: walletAddress, chainId: chainId, message: message, signature: signature
+) { result in
+  // ...
+}
+```
+
+
+- **initWallet**: Initialize a smart account.
+- **getPasskeySignersByWalletAddress**: Get the list of passkey signers for a given wallet address.
+- **createWebAuthnSigner**: Create the webauthn signer for a given wallet address and public key.
+- **isValidSignature**: Check if a signature is valid for a given message.
+
+
 ## Dependencies
 
 Swift4337 is built on top of [web3.swift](https://github.com/argentlabs/web3.swift).
